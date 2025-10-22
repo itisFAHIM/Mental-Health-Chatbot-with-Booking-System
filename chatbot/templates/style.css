@@ -1,0 +1,110 @@
+/* Gemini-like minimalist UI */
+
+body {
+  background: linear-gradient(135deg, #dff1ff, #f4f9ff);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.chat-container {
+  background: white;
+  width: 420px;
+  max-height: 90vh;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  background: linear-gradient(90deg, #007aff, #00b0ff);
+  color: white;
+  text-align: center;
+  padding: 15px 10px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
+header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.chat-box {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bot-msg, .user-msg {
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  font-size: 15px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.bot-msg {
+  background: #f1f3f4;
+  align-self: flex-start;
+}
+
+.user-msg {
+  background: #007aff;
+  color: white;
+  align-self: flex-end;
+}
+
+.input-area {
+  display: flex;
+  border-top: 1px solid #eee;
+  padding: 10px;
+  background: #fff;
+}
+
+#user-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+#send-btn {
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+#send-btn:hover {
+  background: #005fcb;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

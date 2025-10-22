@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Signup</title>
+<link rel="stylesheet" href="/static/css/style.css"></head>
+<body class="auth-page">
+  <div class="auth-card">
+    <h2>Create account</h2>
+    <input id="username" placeholder="Username">
+    <input id="email" placeholder="Email (optional)">
+    <input id="password" placeholder="Password" type="password">
+    <button id="signup">Sign up</button>
+    <p>Already have an account? <a href="/login/">Login</a></p>
+  </div>
+  <script>
+  async function postJSON(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); return r.json();}
+  document.getElementById('signup').addEventListener('click', async ()=>{
+    const u=document.getElementById('username').value, e=document.getElementById('email').value, p=document.getElementById('password').value;
+    const res = await postJSON('/api/auth/register/', {username:u,email:e,password:p});
+    if(res.token){ localStorage.setItem('token', res.token); window.location.href = '/'; } else { alert('Signup failed'); }
+  });
+  </script>
+</body></html>

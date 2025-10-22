@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mental Health Chatbot</title>
+</head>
+<body>
+    <h2>Mental Health Chatbot</h2>
+    <textarea id="message" rows="3" cols="50" placeholder="Type your message..."></textarea><br>
+    <button onclick="sendMessage()">Send</button>
+    <div id="response" style="margin-top:20px;"></div>
+
+    <script>
+        async function sendMessage() {
+            const msg = document.getElementById("message").value;
+            const resBox = document.getElementById("response");
+            resBox.innerHTML = "Thinking...";
+
+            const response = await fetch("/api/chat/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: msg })
+            });
+
+            const data = await response.json();
+            resBox.innerHTML = "Bot: " + data.reply;
+        }
+    </script>
+</body>
+</html>
