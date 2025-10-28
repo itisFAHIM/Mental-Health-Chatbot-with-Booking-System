@@ -39,7 +39,7 @@ h1 {
   font-weight: 600;
 }
 
-/* Chat messages box */
+/* Chat input messages box */
 .chat-box {
   flex: 1;
   overflow-y: auto;
@@ -73,7 +73,7 @@ h1 {
   color: #e0e0e0;
 }
 
-/* Chat form area */
+/* Chat form */
 .chat-form {
   display: flex;
   gap: 10px;
@@ -106,4 +106,24 @@ button {
 
 button:hover {
   background: #00e6b3;
+}
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#logout-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#logout-btn:hover {
+    background-color: #d93636;
 }

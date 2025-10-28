@@ -5,7 +5,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'dev-secret-key-change-in-prod'
 DEBUG = os.getenv('DEBUG','True') == 'True'
-ALLOWED_HOSTS = ['127.0.0.1','localhost']
+ALLOWED_HOSTS = ['192.168.0.110','127.0.0.1','localhost']
 INSTALLED_APPS = [
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
     'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',

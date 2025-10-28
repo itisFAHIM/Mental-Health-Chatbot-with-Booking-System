@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to MindGPT</title>
+  <link rel="stylesheet" href="{% static 'chatbot/style.css' %}">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
+      color: white;
+      text-align: center;
+    }
+    .landing-btn {
+      margin: 10px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 1.1em;
+      cursor: pointer;
+      color: #333;
+      background-color: #fff;
+      transition: 0.3s;
+    }
+    .landing-btn:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to MindGPT</h1>
+  <p>Your personal mental health companion.</p>
+  <div>
+    <a href="{% url 'login_page' %}"><button class="landing-btn">Login</button></a>
+    <a href="{% url 'signup_page' %}"><button class="landing-btn">Sign Up</button></a>
+  </div>
+</body>
+</html>

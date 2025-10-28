@@ -1,21 +1,107 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Signup</title>
-<link rel="stylesheet" href="/static/css/style.css"></head>
-<body class="auth-page">
-  <div class="auth-card">
-    <h2>Create account</h2>
-    <input id="username" placeholder="Username">
-    <input id="email" placeholder="Email (optional)">
-    <input id="password" placeholder="Password" type="password">
-    <button id="signup">Sign up</button>
-    <p>Already have an account? <a href="/login/">Login</a></p>
-  </div>
-  <script>
-  async function postJSON(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); return r.json();}
-  document.getElementById('signup').addEventListener('click', async ()=>{
-    const u=document.getElementById('username').value, e=document.getElementById('email').value, p=document.getElementById('password').value;
-    const res = await postJSON('/api/auth/register/', {username:u,email:e,password:p});
-    if(res.token){ localStorage.setItem('token', res.token); window.location.href = '/'; } else { alert('Signup failed'); }
-  });
-  </script>
-</body></html>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindGPT | Sign Up</title>
+    <link rel="stylesheet" href="{% static 'chatbot/style.css' %}">
+    <style>
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #3a6073, #3a7bd5);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 50px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.4em;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        button {
+            background: #fff;
+            color: #3a6073;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 40px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #3a6073;
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        a {
+            color: #fff;
+            text-decoration: underline;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 15px;
+        }
+
+        a:hover {
+            color: #cce3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Create Account</h1>
+        <p>Join MindGPT and start your self-care journey today.</p>
+
+        <!-- <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+        </form> -->
+        <form method="POST" action="{% url 'signup_page' %}">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <a href="{% url 'login_page' %}">Already have an account? Login</a>
+    </div>
+</body>
+</html>
