@@ -1,15 +1,13 @@
-# Mental Health Chatbot — Full Project (Django + PWA)
+ Mental Health Chatbot
 
-## Overview
+Overview
 This project is a demo mental-health counselling chatbot. It includes:
 - Django backend with REST API for authentication, chat, and chat history
 - SQLite database (local)
-- Frontend single-page Progressive Web App (PWA) with a Gemini-like UI (login/signup, chat, history)
-- Integration with Hugging Face Inference API (configurable via environment variable)
 
 **Important:** This is a demonstration only. Not a substitute for professional mental health care.
 
-## Quick local setup (desktop)
+## Quick local setup
 1. Create a Python virtualenv and activate it:
    ```bash
    python3 -m venv venv
