@@ -27,6 +27,9 @@ This project is a demo mental-health counselling chatbot. It includes:
    python manage.py migrate
    python manage.py runserver 0.0.0.0:8000
    ```
-## Install on Pixel 7 (PWA)
+## Install on your any Android or IOS Device:
 - Expose your dev server to the phone (ngrok or localtunnel) or use LAN IP.
 - Open the site in Chrome on your Pixel 7 and choose "Add to Home screen".
+- Run the server with python manage.py runserver 0.0.0.0:8000
+- Type your IP:8000 in any browser in your phone to run it there.
+
