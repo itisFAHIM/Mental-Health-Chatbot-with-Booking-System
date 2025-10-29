@@ -31,5 +31,5 @@ This project is a demo mental-health counselling chatbot. It includes:
 - Expose your dev server to the phone (ngrok or localtunnel) or use LAN IP.
 - Open the site in Chrome on your Pixel 7 and choose "Add to Home screen".
 - Run the server with python manage.py runserver 0.0.0.0:8000
-- Type your IP:8000 in any browser in your phone to run it there.
+- Type your IP:8000 in any browser in your phone to run it there. e.g.(http://192.168.0.110:8000/)
 
