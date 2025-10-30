@@ -45,5 +45,3 @@ form.addEventListener('submit', async (e)=>{
 });
 (async ()=>{ await loadHistory(); })();
 logoutBtn && (logoutBtn.onclick = ()=>{ localStorage.removeItem('token'); location.href='/login/'; });
-const data = await response.json();
-appendMessage(data.reply || "⚠️ Sorry, I didn’t understand that.", "bot");

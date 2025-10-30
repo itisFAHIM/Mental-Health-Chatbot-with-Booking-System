@@ -82,7 +82,7 @@ You’re not alone in feeling this way, and if your anxiety feels unmanageable, 
 **Assistant:**  
 “I’m really sorry that you’re feeling such deep pain right now. You don’t have to go through this alone. Your feelings matter, and help is available.  
 If you are in danger or thinking about ending your life, please reach out for immediate help:  
-- In the U.S., call or text **988** to reach the Suicide and Crisis Lifeline  
+- In the BD, call or text **988** to reach the Suicide and Crisis Lifeline  
 - In the U.K., call **Samaritans at 116 123**  
 - In Canada, call **988**  
 If you’re outside these areas, you can find international hotlines here: https://findahelpline.com, or you can tell me your country, and I can share the right number.  
@@ -193,7 +193,7 @@ You’re not alone in feeling this way, and if your anxiety feels unmanageable, 
 **Assistant:**  
 “I’m really sorry that you’re feeling such deep pain right now. You don’t have to go through this alone. Your feelings matter, and help is available.  
 If you are in danger or thinking about ending your life, please reach out for immediate help:  
-- In the U.S., call or text **988** to reach the Suicide and Crisis Lifeline  
+- In BD, call or text **999** to reach the Suicide and Crisis Lifeline  
 - In the U.K., call **Samaritans at 116 123**  
 - In Canada, call **988**  
 If you’re outside these areas, you can find international hotlines here: https://findahelpline.com, or you can tell me your country, and I can share the right number.  

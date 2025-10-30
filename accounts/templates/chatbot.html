@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+</head>
+<body>
+    <h2>Chatbot</h2>
+
+    <div>
+        {% for chat in chats %}
+            <p><b>You:</b> {{ chat.text }}</p>
+            <p><b>Bot:</b> {{ chat.response }}</p>
+            <hr>
+        {% empty %}
+            <p>No messages yet.</p>
+        {% endfor %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Type your message..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <a href="{% url 'home' %}">Back Home</a>
+</body>
+</html>
