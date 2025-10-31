@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+import uuid
 User = get_user_model()
+
 class Message(models.Model):
     SENDER_USER = 'user'
     SENDER_BOT = 'bot'
@@ -16,6 +19,10 @@ from django.contrib.auth.models import User
 
 class ChatHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    # ADD THIS FIELD to group messages
+    conversation_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    
     message = models.TextField()
     reply = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

@@ -1,12 +1,189 @@
+# import subprocess
+# import ollama
+# import json
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# from django.shortcuts import render, redirect
+# from .prompts import system_prompt_llama, system_prompt_qwen3
+# from django.contrib.auth.models import User
+# from django.contrib import messages
+# from django.contrib.auth import authenticate, login
+
+# # ---------- PAGE VIEWS ----------
+
+# def landing_page(request):
+#     """Landing page with login and signup buttons"""
+#     return render(request, 'chatbot/landing.html')
+
+
+# def login_page(request):
+#     if request.method == "POST":
+#         username = request.POST.get("username")
+#         password = request.POST.get("password")
+
+#         # 1. Use Django's authenticate to check credentials against the database
+#         user = authenticate(request, username=username, password=password)
+
+#         if user is not None:
+#             # 2. Use Django's login to establish a proper session
+#             login(request, user)
+            
+#             # Keep your custom session keys for compatibility with your 'index' view check
+#             request.session["is_logged_in"] = True
+#             request.session["username"] = username 
+#             return redirect("index")
+#         else:
+#             # 3. Authentication failed
+#             return render(request, 'chatbot/login.html', {"error": "Invalid username or password"})
+
+#     return render(request, 'chatbot/login.html')
+
+
+# # def signup_page(request):
+# #     if request.method == "POST":
+# #         username = request.POST.get("username")
+# #         password = request.POST.get("password")
+# #         # Normally you'd save to a database here
+
+# #         if username and password:
+# #             return redirect("login_page")
+# #         else:
+# #             return render(request, 'chatbot/signup.html', {"error": "Please fill all fields"})
+
+# #     return render(request, 'chatbot/signup.html')
+
+# def signup_page(request):
+#     if request.method == "POST":
+#         username = request.POST.get("username")
+#         email = request.POST.get("email")
+#         password = request.POST.get("password")
+
+#         if username and email and password:
+#             # Check if username already exists
+#             if User.objects.filter(username=username).exists():
+#                 return render(request, 'chatbot/signup.html', {"error": "Username already exists"})
+            
+#             # Check if email already exists
+#             if User.objects.filter(email=email).exists():
+#                 return render(request, 'chatbot/signup.html', {"error": "Email already registered"})
+            
+#             try:
+#                 # Create the user
+#                 User.objects.create_user(
+#                     username=username,
+#                     email=email,
+#                     password=password
+#                 )
+#                 messages.success(request, 'Account created successfully! Please login.')
+#                 return redirect("login_page")
+#             except Exception as e:
+#                 return render(request, 'chatbot/signup.html', {"error": "An error occurred. Please try again."})
+#         else:
+#             return render(request, 'chatbot/signup.html', {"error": "Please fill all fields"})
+
+#     return render(request, 'chatbot/signup.html')
+
+
+# def logout_view(request):
+#     request.session.flush()
+#     return redirect("landing_page")
+
+
+# def index(request):
+#     """Main chat interface (protected)"""
+#     if not request.session.get("is_logged_in"):
+#         return redirect("landing_page")
+
+#     if "chat_history" not in request.session:
+#         request.session["chat_history"] = []
+
+#     return render(request, 'chatbot/index.html')
+
+
+# # ---------- API ENDPOINTS ----------
+
+# def register_view(request):
+#     return JsonResponse({"status": "success", "message": "Register API placeholder"})
+
+
+# def login_view(request):
+#     return JsonResponse({"status": "success", "message": "Login API placeholder"})
+
+
+# def history_api(request):
+#     history = request.session.get("chat_history", [])
+#     return JsonResponse({"status": "success", "history": history})
+
+
+
+# @csrf_exempt
+# def chatbot_response(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             user_message = data.get("message", "")
+
+#             if not user_message.strip():
+#                 return JsonResponse({"reply": "Please type a message."})
+
+#             # Get chat history from session
+#             chat_history = request.session.get("chat_history", [])
+            
+#             # Build messages for ollama.chat
+#             messages = [
+#                 {
+#                     "role": "system",
+#                     "content": system_prompt_qwen3
+#                 }
+#             ]
+            
+#             # Add previous conversation history
+#             for exchange in chat_history:
+#                 messages.append({"role": "user", "content": exchange["user"]})
+#                 messages.append({"role": "assistant", "content": exchange["bot"]})
+            
+#             # Add current user message
+#             messages.append({"role": "user", "content": user_message})
+
+#             # Call ollama.chat
+#             response = ollama.chat(
+#                 model="qwen3:4b",
+#                 messages=messages
+#             )
+
+#             reply = response['message']['content'].strip()
+            
+#             if not reply:
+#                 reply = "I'm here to listen. Could you share more about how you're feeling?"
+
+#             # Save to session chat history
+#             chat_history.append({"user": user_message, "bot": reply})
+#             request.session["chat_history"] = chat_history
+#             request.session.modified = True
+
+#             return JsonResponse({"reply": reply})
+            
+#         except Exception as e:
+#             print("Error in chatbot_response:", e)
+#             return JsonResponse({"reply": "I'm having trouble responding right now. Please try again."})
+#     else:
+#         return JsonResponse({"reply": "Invalid request method."})
+
+# chatbot/views.py
 import subprocess
 import ollama
 import json
+import uuid # <-- ADDED IMPORT
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from .prompts import system_prompt_llama, system_prompt_qwen3
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from .models import ChatHistory  # <-- IMPORT YOUR MODEL
+from django.db.models import Subquery, OuterRef, F # <-- ADDED IMPORTS
 
 # ---------- PAGE VIEWS ----------
 
@@ -19,30 +196,14 @@ def login_page(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-
-        #login check
-        if username and password:
-            request.session["is_logged_in"] = True
-            request.session["username"] = username
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
             return redirect("index")
         else:
-            return render(request, 'chatbot/login.html', {"error": "Invalid credentials"})
-
+            return render(request, 'chatbot/login.html', {"error": "Invalid username or password"})
     return render(request, 'chatbot/login.html')
 
-
-# def signup_page(request):
-#     if request.method == "POST":
-#         username = request.POST.get("username")
-#         password = request.POST.get("password")
-#         # Normally you'd save to a database here
-
-#         if username and password:
-#             return redirect("login_page")
-#         else:
-#             return render(request, 'chatbot/signup.html', {"error": "Please fill all fields"})
-
-#     return render(request, 'chatbot/signup.html')
 
 def signup_page(request):
     if request.method == "POST":
@@ -51,16 +212,13 @@ def signup_page(request):
         password = request.POST.get("password")
 
         if username and email and password:
-            # Check if username already exists
             if User.objects.filter(username=username).exists():
                 return render(request, 'chatbot/signup.html', {"error": "Username already exists"})
             
-            # Check if email already exists
             if User.objects.filter(email=email).exists():
                 return render(request, 'chatbot/signup.html', {"error": "Email already registered"})
             
             try:
-                # Create the user
                 User.objects.create_user(
                     username=username,
                     email=email,
@@ -77,18 +235,13 @@ def signup_page(request):
 
 
 def logout_view(request):
-    request.session.flush()
+    logout(request)
     return redirect("landing_page")
 
 
+@login_required(login_url='landing_page') 
 def index(request):
     """Main chat interface (protected)"""
-    if not request.session.get("is_logged_in"):
-        return redirect("landing_page")
-
-    if "chat_history" not in request.session:
-        request.session["chat_history"] = []
-
     return render(request, 'chatbot/index.html')
 
 
@@ -102,58 +255,134 @@ def login_view(request):
     return JsonResponse({"status": "success", "message": "Login API placeholder"})
 
 
-def history_api(request):
-    history = request.session.get("chat_history", [])
-    return JsonResponse({"status": "success", "history": history})
+# === NEW FUNCTION 1 ===
+@login_required
+def conversation_list_api(request):
+    """
+    Returns a list of all unique conversations for the user.
+    """
+    # Get the first message for each conversation to use as a title
+    first_message = ChatHistory.objects.filter(
+        conversation_id=OuterRef('conversation_id'),
+        user=request.user
+    ).order_by('timestamp').values('message')[:1]
+
+    conversations = ChatHistory.objects.filter(
+        user=request.user
+    ).values(
+        'conversation_id',
+        first_message_text=Subquery(first_message)
+    ).distinct().order_by('-timestamp') # Order by most recent
+
+    # Format for frontend
+    conv_list = [
+        {
+            "id": str(conv['conversation_id']),
+            # Truncate the title
+            "title": (conv['first_message_text'] or "New Chat")[:40] + "..."
+        }
+        for conv in conversations
+    ]
+    return JsonResponse({"conversations": conv_list})
 
 
+# === NEW FUNCTION 2 ===
+@login_required
+def conversation_detail_api(request, conversation_id):
+    """
+    Returns all messages for a specific conversation.
+    """
+    # Check that user owns this conversation
+    if not ChatHistory.objects.filter(user=request.user, conversation_id=conversation_id).exists():
+        return JsonResponse({"error": "Not found or not authorized"}, status=404)
 
+    messages = ChatHistory.objects.filter(
+        user=request.user,
+        conversation_id=conversation_id
+    ).order_by('timestamp')
+
+    history_list = [
+        {"user": item.message, "bot": item.reply}
+        for item in messages
+    ]
+    return JsonResponse({"status": "success", "history": history_list})
+
+
+# === MODIFIED CHATBOT RESPONSE ===
 @csrf_exempt
+@login_required 
 def chatbot_response(request):
     if request.method == "POST":
+        
+        if not request.user.is_authenticated:
+            return JsonResponse({"reply": "Error: You must be logged in to chat."})
+
         try:
             data = json.loads(request.body)
-            user_message = data.get("message", "")
+            user_message = data.get("message", "").strip()
+            
+            # Get conversation_id from frontend (can be null for a new chat)
+            conversation_id_str = data.get("conversation_id")
 
-            if not user_message.strip():
+            if not user_message:
                 return JsonResponse({"reply": "Please type a message."})
 
-            # Get chat history from session
-            chat_history = request.session.get("chat_history", [])
+            # Determine the conversation ID
+            if conversation_id_str:
+                conv_id = uuid.UUID(conversation_id_str)
+                # Security check: Ensure user owns this conversation
+                if not ChatHistory.objects.filter(user=request.user, conversation_id=conv_id).exists():
+                    # If it's a new chat, the check will fail. 
+                    # We need to allow a first message.
+                    # Let's refine this logic.
+                    pass # We will create it soon
+            else:
+                # This is a new chat, generate a new ID
+                conv_id = uuid.uuid4()
             
-            # Build messages for ollama.chat
+            # Refined check: if an ID is passed, check ownership OR if it's new
+            if conversation_id_str:
+                 conv_id = uuid.UUID(conversation_id_str)
+                 if ChatHistory.objects.filter(conversation_id=conv_id).exists() and not ChatHistory.objects.filter(user=request.user, conversation_id=conv_id).exists():
+                     return JsonResponse({"reply": "Error: Conversation not found."}, status=404)
+            else:
+                 conv_id = uuid.uuid4()
+
+
+            # Get chat history FOR THIS CONVERSATION
+            db_history = ChatHistory.objects.filter(
+                user=request.user, 
+            ).order_by('timestamp')
+            
             messages = [
-                {
-                    "role": "system",
-                    "content": system_prompt_qwen3
-                }
+                {"role": "system", "content": system_prompt_qwen3}
             ]
             
-            # Add previous conversation history
-            for exchange in chat_history:
-                messages.append({"role": "user", "content": exchange["user"]})
-                messages.append({"role": "assistant", "content": exchange["bot"]})
+            for exchange in db_history:
+                messages.append({"role": "user", "content": exchange.message})
+                messages.append({"role": "assistant", "content": exchange.reply})
             
-            # Add current user message
             messages.append({"role": "user", "content": user_message})
 
-            # Call ollama.chat
             response = ollama.chat(
                 model="qwen3:4b",
                 messages=messages
             )
-
             reply = response['message']['content'].strip()
             
             if not reply:
                 reply = "I'm here to listen. Could you share more about how you're feeling?"
 
-            # Save to session chat history
-            chat_history.append({"user": user_message, "bot": reply})
-            request.session["chat_history"] = chat_history
-            request.session.modified = True
+            # Save to DATABASE with the correct conversation_id
+            ChatHistory.objects.create(
+                user=request.user,
+                conversation_id=conv_id, # <-- Save with the ID
+                message=user_message,
+                reply=reply
+            )
 
-            return JsonResponse({"reply": reply})
+            # Return the reply AND the conversation_id
+            return JsonResponse({"reply": reply, "conversation_id": str(conv_id)})
             
         except Exception as e:
             print("Error in chatbot_response:", e)
