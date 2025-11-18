@@ -97,12 +97,19 @@
         {% endif %}
 
         <form method="POST" action="{% url 'signup_page' %}">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Sign Up</button>
-        </form>
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username" required><br> 
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+    
+    <div style="text-align: left; padding: 0 10px; margin-bottom: 20px;">
+        <input type="checkbox" name="is_doctor" id="is_doctor">
+        <label for="is_doctor" style="font-size: 0.9em; color: rgba(255, 255, 255, 0.9);">
+            I am a doctor / psychologist
+        </label>
+    </div>
+    <button type="submit">Sign Up</button>
+</form>
 
         <a href="{% url 'login_page' %}">Already have an account? Login</a>
     </div>

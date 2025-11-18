@@ -7,9 +7,17 @@ SECRET_KEY = 'dev-secret-key-change-in-prod'
 DEBUG = os.getenv('DEBUG','True') == 'True'
 ALLOWED_HOSTS = ['192.168.0.110','127.0.0.1','localhost']
 INSTALLED_APPS = [
-    'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
-    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
-    'rest_framework','rest_framework.authtoken','chatbot',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    
+    'rest_framework',
+    'rest_framework.authtoken',
+    'chatbot',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware','django.contrib.sessions.middleware.SessionMiddleware',
@@ -47,3 +55,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.TokenAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',)
 }
+# --- MEDIA FILES (USER UPLOADS) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

@@ -21,9 +21,15 @@
             <div class="chat-header">
                 <button type="button" id="history-toggle-btn">☰</button>
                 <h1>MindGPT</h1>
-                <a href="{% url 'logout_view' %}">
-                    <button type="button" id="logout-btn">Logout</button>
-                </a>
+                
+                <div class="header-buttons">
+                    <a href="{% url 'landing_page' %}">
+                        <button type="button" id="home-btn">Home</button>
+                    </a>
+                    <a href="{% url 'logout_view' %}">
+                        <button type="button" id="logout-btn">Logout</button>
+                    </a>
+                </div>
             </div>
 
             <div id="chat-box" class="chat-box"></div>

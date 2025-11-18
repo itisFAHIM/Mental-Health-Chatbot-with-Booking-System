@@ -1,0 +1,349 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - MindGPT</title>
+    <style>
+        /* Base styles from landing.html */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%);
+            color: #333;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px; /* A good width for a feed */
+            margin: 0 auto;
+        }
+        .navbar {
+            padding: 20px 0;
+            background-color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .navbar .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .navbar .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+        .navbar .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+        }
+        .navbar .nav-links a.active {
+            color: #007bff;
+        }
+        .navbar .nav-auth {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white; 
+        }
+        .btn-secondary {
+            background-color: #e9f2ff;
+            color: #007bff;
+        }
+        .btn-danger {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        /* --- New Styles for Article Page --- */
+        .main-content {
+            padding: 40px 0;
+        }
+        
+        /* Post Creation Form */
+        .create-post-form {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .create-post-form h3 {
+            margin-top: 0;
+            color: #222;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* Important */
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-group input[type="file"] {
+            padding: 0;
+            border: none;
+        }
+        .btn-post {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* Article Feed */
+        .article-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .article-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden; /* To contain the image */
+        }
+        .article-image img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: cover;
+        }
+        .article-content {
+            padding: 25px;
+        }
+        
+        /* Author Styles */
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .author-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #eee;
+        }
+        .author-details {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .article-content h2 {
+            margin: 0 0 10px 0;
+            color: #222;
+        }
+        .article-content p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #444;
+            white-space: pre-wrap; /* Respects newlines in the post */
+        }
+
+        /* --- NEW: Styles for "View More" --- */
+        .article-body-short {
+            max-height: 150px; /* About 7-8 lines */
+            overflow: hidden;
+            position: relative;
+            /* Create a fade-out effect at the bottom */
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        }
+        .article-body-full {
+            max-height: none;
+            mask-image: none;
+        }
+        .view-more-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 5px 0;
+            margin-top: 10px;
+        }
+        /* --- END NEW STYLES --- */
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo">
+                <img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo">
+                MindGPT
+            </a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'article_feed_page' %}">Articles</a>
+                    <a href="{% url 'index' %}">MindGPT Chat</a>
+                    <a href="{% url 'online_session_page' %}">Online Session</a>
+                    
+                    <a href="{% url 'my_appointments' %}">My Appointments</a>
+                    
+                    {% if user.profile.role == 'doctor' and user.profile.is_approved %}
+                        <a href="{% url 'search_patients' %}">Patient Search</a>
+                    {% endif %}
+                {% else %}
+                    {% endif %}
+            </div>
+            <div class="nav-auth">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                    <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+                {% else %}
+                    <a href="{% url 'login_page' %}" class="btn btn-secondary">Login</a>
+                    <a href="{% url 'signup_chooser' %}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            
+            {% if is_doctor %}
+            <div class="create-post-form">
+                <h3>Create New Article</h3>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="headline">Headline</label>
+                        <input type="text" name="headline" id="headline" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea name="content" id="content" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Add Image (Optional)</label>
+                        <input type="file" name="image" id="image" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn-post">Post Article</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="article-feed">
+                {% for article in articles %}
+                <div class="article-card" id="article-{{ article.id }}">
+                    {% if article.image %}
+                    <div class="article-image">
+                        <img src="{{ article.image.url }}" alt="{{ article.headline }}">
+                    </div>
+                    {% endif %}
+                    <div class="article-content">
+                        
+                        <div class="author-info">
+                            {% if article.author.profile.profile_picture %}
+                                <img src="{{ article.author.profile.profile_picture.url }}" alt="{{ article.author.username }}" class="author-avatar">
+                            {% else %}
+                                <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar" class="author-avatar">
+                            {% endif %}
+                            <div class="author-details">
+                                <strong>{{ article.author.username }}</strong>
+                                {% if article.author.profile.role == 'doctor' %} 
+                                    <span style="color: #007bff; font-weight: 600;">(Verified Specialist)</span> 
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h2>{{ article.headline }}</h2>
+                        
+                        <div class="article-body-short" id="article-body-{{ article.id }}">
+                            <p>{{ article.content }}</p>
+                        </div>
+                        <button class="view-more-btn" data-target="article-body-{{ article.id }}">
+                            View More
+                        </button>
+                        </div>
+                </div>
+                {% empty %}
+                <p>No articles have been posted yet. Check back soon!</p>
+                {% endfor %}
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Find all "View More" buttons
+            const viewMoreButtons = document.querySelectorAll('.view-more-btn');
+            
+            viewMoreButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Get the target ID from the button's data attribute
+                    const targetId = button.dataset.target;
+                    const contentElement = document.getElementById(targetId);
+                    
+                    if (contentElement) {
+                        // Toggle the classes
+                        contentElement.classList.toggle('article-body-short');
+                        contentElement.classList.toggle('article-body-full');
+                        
+                        // Change the button text
+                        if (contentElement.classList.contains('article-body-full')) {
+                            button.textContent = 'View Less';
+                        } else {
+                            button.textContent = 'View More';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    </body>
+</html>

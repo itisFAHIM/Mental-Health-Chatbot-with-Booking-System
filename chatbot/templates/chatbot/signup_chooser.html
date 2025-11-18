@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - MindGPT</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #3a6073, #3a7bd5);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow: hidden;
+        }
+        .chooser-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 50px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 400px;
+            max-width: 90%;
+        }
+        h2 {
+            font-size: 2.4em;
+            margin-bottom: 30px;
+        }
+        .btn-choice {
+            display: block;
+            width: 100%;
+            background: #fff;
+            color: #3a6073;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            padding: 14px 40px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            text-decoration: none;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+        .btn-choice:hover {
+            background: #eee;
+            transform: scale(1.05);
+        }
+        a.login-link {
+            color: #fff;
+            text-decoration: underline;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chooser-container">
+        <h2>Join as a...</h2>
+        <a href="{% url 'patient_signup' %}" class="btn-choice">Patient / User</a>
+        <a href="{% url 'doctor_signup' %}" class="btn-choice">Doctor / Specialist</a>
+        <a href="{% url 'login_page' %}" class="login-link">Already have an account? Login</a>
+    </div>
+</body>
+</html>
