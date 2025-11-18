@@ -778,10 +778,13 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
 # ---------- PAGE VIEWS ----------
+
 def landing_page(request):
+    """
+    Renders the landing page.
+    """
     articles = Article.objects.all()[:3]
     
-    # Fetch top 3 available doctors
     available_doctors = User.objects.filter(
         profile__role='doctor', 
         profile__is_approved=True, 
@@ -855,7 +858,7 @@ def doctor_signup_view(request):
         form = DoctorSignUpForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('waiting_approval')
+            return redirect('waiting_approval') # Send to waiting page
     else:
         form = DoctorSignUpForm()
     return render(request, 'chatbot/doctor_signup.html', {'form': form})
@@ -882,7 +885,12 @@ def profile_view(request):
         profile = Profile.objects.create(user=request.user)
 
     if request.method == 'POST':
-        # If using the update form
+        if 'toggle_availability' in request.POST:
+             profile.is_available = not profile.is_available
+             profile.save()
+             messages.success(request, 'Your availability has been updated.')
+             return redirect('profile_page')
+
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
@@ -902,14 +910,12 @@ def register_view(request):
     return JsonResponse({"status": "success", "message": "Register API placeholder"})
 def login_view(request):
     return JsonResponse({"status": "success", "message": "Login API placeholder"})
-
 @login_required
 def conversation_list_api(request):
     first_message = ChatHistory.objects.filter(conversation_id=OuterRef('conversation_id'), user=request.user).order_by('timestamp').values('message')[:1]
     conversations = ChatHistory.objects.filter(user=request.user).values('conversation_id', first_message_text=Subquery(first_message)).distinct().order_by('-timestamp')
     conv_list = [{"id": str(conv['conversation_id']), "title": (conv['first_message_text'] or "New Chat")[:40] + "..."} for conv in conversations]
     return JsonResponse({"conversations": conv_list})
-
 @login_required
 def conversation_detail_api(request, conversation_id):
     if not ChatHistory.objects.filter(user=request.user, conversation_id=conversation_id).exists():
@@ -917,41 +923,64 @@ def conversation_detail_api(request, conversation_id):
     messages = ChatHistory.objects.filter(user=request.user, conversation_id=conversation_id).order_by('timestamp')
     history_list = [{"user": item.message, "bot": item.reply} for item in messages]
     return JsonResponse({"status": "success", "history": history_list})
-
 @csrf_exempt
 @login_required 
 def chatbot_response(request):
     if request.method == "POST":
-        if not request.user.is_authenticated:
-            return JsonResponse({"reply": "Error: You must be logged in to chat."})
         try:
             data = json.loads(request.body)
             user_message = data.get("message", "").strip()
             conversation_id_str = data.get("conversation_id")
+            
             if not user_message:
                 return JsonResponse({"reply": "Please type a message."})
 
+            # Get or create conversation ID
             if conversation_id_str:
-                 conv_id = uuid.UUID(conversation_id_str)
-                 if ChatHistory.objects.filter(conversation_id=conv_id).exists() and not ChatHistory.objects.filter(user=request.user, conversation_id=conv_id).exists():
-                     return JsonResponse({"reply": "Error: Conversation not found."}, status=404)
+                conv_id = uuid.UUID(conversation_id_str)
+                # Verify ownership
+                if ChatHistory.objects.filter(conversation_id=conv_id).exists():
+                    if not ChatHistory.objects.filter(user=request.user, conversation_id=conv_id).exists():
+                        return JsonResponse({"reply": "Error: Conversation not found."}, status=404)
             else:
-                 conv_id = uuid.uuid4()
+                conv_id = uuid.uuid4()
             
-            db_history = ChatHistory.objects.filter(user=request.user).order_by('timestamp')
-            messages = [{"role": "system", "content": system_prompt_qwen3}]
-            for exchange in db_history:
+            # Load ONLY this conversation's history (limited to recent messages)
+            db_history = ChatHistory.objects.filter(
+                user=request.user,
+                conversation_id=conv_id
+            ).order_by('-timestamp')[:10]  # Last 10 exchanges only
+            
+            # Build message context
+            messages = [{"role": "system", "content": system_prompt_gemma}]
+            
+            # Add history in correct order (oldest first)
+            for exchange in reversed(list(db_history)):
                 messages.append({"role": "user", "content": exchange.message})
                 messages.append({"role": "assistant", "content": exchange.reply})
+            
+            # Add current message
             messages.append({"role": "user", "content": user_message})
+            MODEL="gemma3:4b"
 
-            response = ollama.chat(model="qwen3:4b", messages=messages)
+            # Call model
+
+            response = ollama.chat(model=MODEL, messages=messages)
             reply = response['message']['content'].strip()
+            
             if not reply:
                 reply = "I'm here to listen. Could you share more about how you're feeling?"
 
-            ChatHistory.objects.create(user=request.user, conversation_id=conv_id, message=user_message, reply=reply)
+            # Save to database
+            ChatHistory.objects.create(
+                user=request.user,
+                conversation_id=conv_id,
+                message=user_message,
+                reply=reply
+            )
+            
             return JsonResponse({"reply": reply, "conversation_id": str(conv_id)})
+            
         except Exception as e:
             print("Error in chatbot_response:", e)
             return JsonResponse({"reply": "I'm having trouble responding right now. Please try again."})
@@ -1057,7 +1086,7 @@ def toggle_availability_view(request):
     return redirect('profile_page')
 
 
-# --- APPOINTMENT VIEWS (THESE WERE MISSING) ---
+# --- APPOINTMENT VIEWS ---
 
 @login_required(login_url='login_page')
 def book_appointment_view(request, doctor_id):
@@ -1089,7 +1118,6 @@ def book_appointment_view(request, doctor_id):
                 messages.error(request, f'An error occurred: {e}')
             return redirect('book_appointment', doctor_id=doctor.id)
 
-    # --- Generate slots for GET request ---
     today = timezone.localdate()
     booked_slots_qs = Appointment.objects.filter(
         doctor=doctor, 
@@ -1127,14 +1155,19 @@ def book_appointment_view(request, doctor_id):
 
 @login_required(login_url='login_page')
 def booking_pending_view(request):
+    """
+    Shows the "waiting for confirmation" message to the patient.
+    """
     return render(request, 'chatbot/booking_pending.html')
 
 
 @login_required(login_url='login_page')
 def my_appointments_view(request):
+    """
+    Dashboard for patients and doctors. Doctors can add/clear meet links here.
+    """
     context = {}
     
-    # --- Handle Doctor's POST requests ---
     if request.method == 'POST' and request.user.profile.role == 'doctor':
         try:
             appt_id = request.POST.get('appointment_id')
@@ -1156,7 +1189,6 @@ def my_appointments_view(request):
         except Exception as e:
             messages.error(request, f"Error updating link: {e}")
 
-    # --- Handle Patient submitting feedback ---
     if request.method == 'POST' and request.user.profile.role == 'patient':
         try:
             appt_id = request.POST.get('appointment_id')
@@ -1174,7 +1206,6 @@ def my_appointments_view(request):
         except Exception as e:
              messages.error(request, f"Error submitting feedback: {e}")
 
-    # --- GET Logic (shows the page) ---
     if request.user.profile.role == 'doctor':
         context['pending_appointments'] = Appointment.objects.filter(doctor=request.user, status='pending')
         context['confirmed_appointments'] = Appointment.objects.filter(doctor=request.user, status='confirmed')
@@ -1184,43 +1215,47 @@ def my_appointments_view(request):
         context['confirmed_appointments'] = Appointment.objects.filter(patient=request.user, status='confirmed')
         context['completed_appointments'] = Appointment.objects.filter(patient=request.user, status='completed')
         context['declined_appointments'] = Appointment.objects.filter(patient=request.user, status='declined')
-
-    # Fetch available doctors for the sidebar
-    context['available_doctors'] = User.objects.filter(
-        profile__role='doctor', 
-        profile__is_approved=True, 
-        profile__is_available=True
-    )[:3]
         
     return render(request, 'chatbot/my_appointments.html', context)
 
 
 @user_passes_test(is_approved_doctor, login_url='landing_page')
 def approve_appointment_view(request, appointment_id):
+    """
+    Allows a doctor to approve a pending appointment.
+    """
     appointment = get_object_or_404(Appointment, id=appointment_id)
+    
     if appointment.doctor == request.user:
         appointment.status = 'confirmed'
         appointment.save()
         messages.success(request, 'Appointment confirmed! Please add a meeting link.')
     else:
         messages.error(request, 'You are not authorized to approve this appointment.')
+        
     return redirect('my_appointments')
-
 
 @user_passes_test(is_approved_doctor, login_url='landing_page')
 def decline_appointment_view(request, appointment_id):
+    """
+    Allows a doctor to decline a pending appointment.
+    """
     appointment = get_object_or_404(Appointment, id=appointment_id)
+    
     if appointment.doctor == request.user:
         appointment.status = 'declined'
         appointment.save()
         messages.success(request, 'Appointment declined.')
     else:
         messages.error(request, 'You are not authorized to decline this appointment.')
+        
     return redirect('my_appointments')
-
 
 @user_passes_test(is_approved_doctor, login_url='landing_page')
 def complete_appointment_view(request, appointment_id):
+    """
+    Allows a doctor to mark an appointment as complete.
+    """
     appointment = get_object_or_404(Appointment, id=appointment_id)
     if appointment.doctor == request.user:
         appointment.status = 'completed'

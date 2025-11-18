@@ -133,21 +133,21 @@
                 </div>
                 
                 {% if profile.role == 'doctor' %}
-                <form class="availability-form" method="POST" action="{% url 'profile_page' %}">
-                    {% csrf_token %}
-                    {% if profile.is_available %}
-                        <p>Your status is: <strong style="color: #28a745;">Available</strong></p>
-                        <button type="submit" class="btn-toggle btn-toggle-off" name="toggle_availability">
-                            Go Offline
-                        </button>
-                    {% else %}
-                        <p>Your status is: <strong style="color: #777;">Offline</strong></p>
-                        <button type="submit" class="btn-toggle btn-toggle-on" name="toggle_availability">
-                            Go Online (Show Available)
-                        </button>
-                    {% endif %}
-                </form>
-                {% endif %}
+<form class="availability-form" method="POST" action="{% url 'toggle_availability' %}">
+    {% csrf_token %}
+    {% if profile.is_available %}
+        <p>Your status is: <strong style="color: #28a745;">Available</strong></p>
+        <button type="submit" class="btn-toggle btn-toggle-off" name="toggle_availability">
+            Go Offline
+        </button>
+    {% else %}
+        <p>Your status is: <strong style="color: #777;">Offline</strong></p>
+        <button type="submit" class="btn-toggle btn-toggle-on" name="toggle_availability">
+            Go Online (Show Available)
+        </button>
+    {% endif %}
+</form>
+{% endif %}
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
                 <h3>Update Your Profile</h3>
