@@ -2,11 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Core Pages
+    # Main Pages
     path('', views.landing_page, name='landing_page'),
     path('chat/', views.index, name='index'),
 
-    # Auth Flow
+    # Authentication Flow
     path('login/', views.login_page, name='login_page'),
     path('logout/', views.logout_view, name='logout_view'),
     path('signup/', views.signup_chooser_view, name='signup_chooser'),
@@ -24,14 +24,14 @@ urlpatterns = [
     path('book-appointment/<int:doctor_id>/', views.book_appointment_view, name='book_appointment'),
     path('complete-appointment/<int:appointment_id>/', views.complete_appointment_view, name='complete_appointment'),
 
-    # Feature Pages
+    # Featured Pages
     path('session/', views.online_session_page, name='online_session_page'),
     path('session/doctor/<int:doctor_id>/', views.doctor_detail_page, name='doctor_detail_page'),
     path('articles/', views.article_feed_page, name='article_feed_page'),
     path('article/<int:article_id>/', views.article_detail_view, name='article_detail_page'),
     path('search-patients/', views.search_patients_view, name='search_patients'),
 
-    # API Endpoints
+    # APIs
     path('api/auth/register/', views.register_view, name='register'),
     path('api/auth/login/', views.login_view, name='login'),
     path('api/chat/', views.chatbot_response, name='chat_api'),

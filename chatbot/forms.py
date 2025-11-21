@@ -16,18 +16,20 @@ class PatientSignUpForm(UserCreationForm):
             'username': forms.TextInput(attrs={'placeholder': 'Username*'}),
         }
 
+        #For getting Database
+
     def save(self, commit=True):
-        user = super().save(commit=False) # Get user object without saving to DB
+        user = super().save(commit=False) 
         
-        # --- THIS IS THE FIX ---
-        # Manually assign the extra fields from the form
+        # From System retrieve
+
         user.first_name = self.cleaned_data.get('first_name')
         user.last_name = self.cleaned_data.get('last_name')
         user.email = self.cleaned_data.get('email')
-        # --- END FIX ---
+        
         
         if commit:
-            user.save() # Now save the user with all fields
+            user.save()
             Profile.objects.create(
                 user=user,
                 role='patient',
@@ -54,11 +56,11 @@ class DoctorSignUpForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         
-        # --- THIS IS THE FIX ---
+        # Form system retrieve
         user.first_name = self.cleaned_data.get('first_name')
         user.last_name = self.cleaned_data.get('last_name')
         user.email = self.cleaned_data.get('email')
-        # --- END FIX ---
+        
         
         if commit:
             user.save()
