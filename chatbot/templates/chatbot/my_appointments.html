@@ -1,0 +1,396 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Appointments - MindGPT</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
+        .container { width: 90%; max-width: 900px; margin: 0 auto; }
+        .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
+        .navbar .nav-links { display: flex; gap: 25px; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-links a.active { color: #007bff; }
+        .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #e9f2ff; color: #007bff; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+        .main-content { padding: 40px 0; }
+        
+        /* Appointments List Styles */
+        .appointments-list { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        h2 { margin-top: 0; }
+        .appointment-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 15px; border-radius: 8px; margin-bottom: 10px; background: #f9f9f9; border: 1px solid #eee; }
+        .appointment-info p { margin: 0; line-height: 1.5; }
+        .appointment-actions { margin-left: auto; text-align: right; }
+        .btn-approve { background-color: #28a745; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .btn-decline { background-color: #ff4d4d; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 10px; }
+        .btn-join { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .btn-complete { background-color: #17a2b8; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 10px; }
+        .status-pending { color: #ff8c00; font-weight: 600; font-size: 0.9em; }
+        .status-completed { color: #28a745; font-weight: 600; font-size: 0.9em; }
+        .status-declined { color: #d93636; font-weight: 600; font-size: 0.9em; }
+        .wait-message { background: #fdf8e6; border: 1px solid #ffecb5; color: #664d03; padding: 10px; border-radius: 8px; font-size: 0.9em; text-align: center; }
+        
+        .link-form { display: flex; gap: 10px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .link-form input[type="url"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        .link-form button { background: #007bff; color: white; border: none; padding: 0 15px; border-radius: 5px; cursor: pointer; }
+        .btn-clear { background: #6c757d; color: white; border: none; padding: 0 10px; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
+        
+        .feedback-section { width: 100%; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .feedback-form textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; padding: 8px; min-height: 80px; }
+        .feedback-form select { padding: 5px; border-radius: 5px; }
+        .feedback-form button { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+        .feedback-display { background: #f4f7fa; padding: 10px; border-radius: 5px; }
+        .feedback-display p { margin: 5px 0; }
+
+        /* --- Right Sidebar Widget Styles --- */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+        .sidebar-widget {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            padding: 25px;
+            height: fit-content;
+        }
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .widget-header h3 { margin: 0; font-size: 1.2rem; color: #333; }
+        .widget-header a { color: #007bff; text-decoration: none; font-size: 0.9em; }
+
+        /* --- Mini Calendar Styles --- */
+        .calendar-widget {
+            margin-top: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #eee;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #007bff;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+            font-size: 0.8em;
+        }
+        .calendar-day-name {
+            color: #888;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .calendar-day {
+            padding: 6px 0;
+            border-radius: 50%;
+            color: #333;
+        }
+        .calendar-day.today {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .calendar-day.empty {
+            background: none;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo"><img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo"> MindGPT</a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                <a href="{% url 'article_feed_page' %}">Articles</a>
+                <a href="{% url 'index' %}">MindGPT Chat</a>
+                <a href="{% url 'online_session_page' %}">Online Session</a>
+                <a href="{% url 'my_appointments' %}" class="active">My Appointments</a>
+                {% if user.is_authenticated and user.profile.role == 'doctor' and user.profile.is_approved %}
+                    <a href="{% url 'search_patients' %}">Patient Search</a>
+                {% endif %}
+            </div>
+            <div class="nav-auth">
+                <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard-layout">
+                
+                <div class="appointments-list">
+                    {% if user.profile.role == 'doctor' %}
+                        <h2>Pending Approvals</h2>
+                        {% for appt in pending_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }} (ID: PID-000{{ appt.patient.id }})</p>
+                                <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{% url 'approve_appointment' appt.id %}" class="btn-approve">Approve</a>
+                                <a href="{% url 'decline_appointment' appt.id %}" class="btn-decline">Decline</a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>You have no pending appointment requests.</p>
+                        {% endfor %}
+                        
+                        <hr style="margin: 30px 0;">
+                        
+                        <h2>Confirmed Appointments</h2>
+                        {% for appt in confirmed_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }}</p>
+                                <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{% url 'complete_appointment' appt.id %}" class="btn-complete">Mark as Complete</a>
+                            </div>
+                            <form class="link-form" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                                <input type="url" name="meeting_link" placeholder="Paste Google Meet link..." value="{{ appt.meeting_link|default:'' }}" required>
+                                <button type="submit" name="save_link">Save</button>
+                                {% if appt.meeting_link %}
+                                <button type="submit" name="clear_link" class="btn-clear">Clear</button>
+                                {% endif %}
+                            </form>
+                        </div>
+                        {% empty %}
+                        <p>You have no confirmed appointments.</p>
+                        {% endfor %}
+                        
+                        <hr style="margin: 30px 0;">
+                        <h2>Completed Appointments</h2>
+                        {% for appt in completed_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }}</p>
+                                <p><strong>Completed:</strong> {{ appt.start_time|date:"D, M d" }}</p>
+                            </div>
+                            {% if appt.feedback_text %}
+                                <div class="feedback-section feedback-display">
+                                    <p><strong>Rating:</strong> {{ appt.rating }} / 5 Stars</p>
+                                    <p><strong>Feedback:</strong> "{{ appt.feedback_text }}"</p>
+                                </div>
+                            {% else %}
+                                <div class="feedback-section">
+                                    <span class="status-pending">Waiting for patient feedback...</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p>You have no completed appointments.</p>
+                        {% endfor %}
+                    
+                    {% else %}
+                        <h2>Confirmed Appointments</h2>
+                        {% for appt in confirmed_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Doctor:</strong> {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</p>
+                                <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
+                            </div>
+                            <div class="appointment-actions">
+                                {% if appt.meeting_link %}
+                                    <a href="{{ appt.meeting_link }}" target="_blank" class="btn-join">Join Online Meeting</a>
+                                {% else %}
+                                    <div class="wait-message">
+                                        Wait for doctor to share the link and try again in 5 minutes.<br>
+                                        Otherwise please call: <strong>01745430372</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>You have no confirmed appointments.</p>
+                        {% endfor %}
+                    
+                        <hr style="margin: 30px 0;">
+                        <h2>Pending Confirmation</h2>
+                        {% for appt in pending_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Doctor:</strong> {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</p>
+                                <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
+                            </div>
+                            <div class="appointment-actions">
+                                <span class="status-pending">Waiting for confirmation...</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>You have no pending appointment requests.</p>
+                        {% endfor %}
+                        
+                        <hr style="margin: 30px 0;">
+                        <h2>Completed Appointments</h2>
+                        {% for appt in completed_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Doctor:</strong> {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</p>
+                                <p><strong>Completed:</strong> {{ appt.start_time|date:"D, M d" }}</p>
+                            </div>
+                            <div class="feedback-section">
+                                {% if not appt.feedback_text %}
+                                    <form class="feedback-form" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                                        <label for="rating-{{appt.id}}">Your Rating:</label>
+                                        <select name="rating" id="rating-{{appt.id}}" required>
+                                            <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                            <option value="4">⭐⭐⭐⭐ (Good)</option>
+                                            <option value="3">⭐⭐⭐ (Average)</option>
+                                            <option value="2">⭐⭐ (Poor)</option>
+                                            <option value="1">⭐ (Terrible)</option>
+                                        </select>
+                                        <br><br>
+                                        <label for="feedback-{{appt.id}}">Your Feedback:</label>
+                                        <textarea name="feedback_text" id="feedback-{{appt.id}}" placeholder="Share your experience..."></textarea>
+                                        <button type="submit" name="submit_feedback">Submit Feedback</button>
+                                    </form>
+                                {% else %}
+                                    <div class="feedback-display">
+                                        <p><strong>Your Rating:</strong> {{ appt.rating }} / 5 Stars</p>
+                                        <p><strong>Your Feedback:</strong> "{{ appt.feedback_text }}"</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>You have no completed appointments.</p>
+                        {% endfor %}
+                        
+                        <hr style="margin: 30px 0;">
+                        <h2>Declined Appointments</h2>
+                        {% for appt in declined_appointments %}
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <p><strong>Doctor:</strong> {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</p>
+                                <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
+                            </div>
+                            <div class="appointment-actions">
+                                <span class="status-declined">Doctor will be not available at this time, try another time or find another Doctor.</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>You have no declined appointments.</p>
+                        {% endfor %}
+
+                    {% endif %}
+                </div>
+
+                <div class="sidebar-widget">
+                    <div class="widget-header">
+                        <h3>Online Session</h3>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'online_session_page' %}">View All &rarr;</a>
+                        {% else %}
+                            <a href="{% url 'login_page' %}">View All &rarr;</a>
+                        {% endif %}
+                    </div>
+                    
+                    {% if available_doctors %}
+                        {% for doctor in available_doctors %}
+                            <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee;">
+                                <div style="width: 50px; height: 50px; border-radius: 50%; background: #ddd; overflow: hidden; flex-shrink: 0;">
+                                    {% if doctor.profile.profile_picture %}
+                                        <img src="{{ doctor.profile.profile_picture.url }}" alt="{{ doctor.first_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 5px 0; color: #333;">{{ doctor.first_name }} {{ doctor.last_name }}</h4>
+                                    <p style="margin: 0; color: #777; font-size: 0.9rem;">{{ doctor.profile.specialty }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; color: #888; font-size: 0.9em; margin: 10px 0;">
+                            No doctors are currently available.
+                        </p>
+                    {% endif %}
+                    <div class="calendar-widget">
+                        <div class="calendar-header" id="calendar-month"></div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <div class="calendar-day-name">S</div>
+                            <div class="calendar-day-name">M</div>
+                            <div class="calendar-day-name">T</div>
+                            <div class="calendar-day-name">W</div>
+                            <div class="calendar-day-name">T</div>
+                            <div class="calendar-day-name">F</div>
+                            <div class="calendar-day-name">S</div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarGrid = document.getElementById('calendar-grid');
+            const calendarMonth = document.getElementById('calendar-month');
+            
+            if (!calendarGrid) return;
+
+            const date = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            
+            calendarMonth.textContent = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            
+            // Add empty slots for previous month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'calendar-day empty';
+                calendarGrid.appendChild(emptyDiv);
+            }
+            
+            // Add days
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                dayDiv.textContent = i;
+                
+                if (i === date.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+                
+                calendarGrid.appendChild(dayDiv);
+            }
+        });
+    </script>
+</body>
+</html>

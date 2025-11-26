@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MindGPT | Sign Up</title>
-    <link rel="stylesheet" href="{% static 'chatbot/style.css' %}">
     <style>
         body {
             margin: 0;
@@ -48,6 +47,7 @@
             margin-bottom: 20px;
             font-size: 1em;
             outline: none;
+            box-sizing: border-box; /* Fixes padding issue */
         }
 
         button {
@@ -63,8 +63,7 @@
         }
 
         button:hover {
-            background: #3a6073;
-            color: #fff;
+            background: #eee;
             transform: scale(1.05);
         }
 
@@ -79,6 +78,13 @@
         a:hover {
             color: #cce3ff;
         }
+
+        .error-message {
+            color: #ffcccc;
+            font-weight: 500;
+            margin-top: -10px; /* Pull it up */
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -86,36 +92,24 @@
         <h1>Create Account</h1>
         <p>Join MindGPT and start your self-care journey today.</p>
 
-        <!-- <form method="POST" action="{% url 'register' %}">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Sign Up</button>
-        </form> -->
-        <!-- <form method="POST" action="{% url 'signup_page' %}">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Sign Up</button>
-        </form> -->
-        {% if messages %}
-        <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
         {% endif %}
 
         <form method="POST" action="{% url 'signup_page' %}">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required><br>
-            <button type="submit">Sign Up</button>
-        </form>
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username" required><br> 
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+    
+    <div style="text-align: left; padding: 0 10px; margin-bottom: 20px;">
+        <input type="checkbox" name="is_doctor" id="is_doctor">
+        <label for="is_doctor" style="font-size: 0.9em; color: rgba(255, 255, 255, 0.9);">
+            I am a doctor / psychologist
+        </label>
+    </div>
+    <button type="submit">Sign Up</button>
+</form>
 
 
         <a href="{% url 'login_page' %}">Already have an account? Login</a>

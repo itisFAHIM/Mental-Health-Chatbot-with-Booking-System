@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up as Patient - MindGPT</title>
+    <style>
+        body { margin: 0; font-family: "Poppins", sans-serif; background: linear-gradient(135deg, #3a6073, #3a7bd5); height: 100vh; display: flex; justify-content: center; align-items: center; color: #fff; overflow-y: auto; padding: 40px 0; }
+        .signup-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 40px 50px; border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); text-align: center; width: 400px; max-width: 90%; }
+        h1 { font-size: 2.4em; margin-bottom: 20px; }
+        input[type="text"], input[type="email"], input[type="password"] { 
+            width: 100%; padding: 12px; border-radius: 10px; border: none; margin-bottom: 20px; font-size: 1em; outline: none; box-sizing: border-box; 
+        }
+        button { background: #fff; color: #3a6073; font-size: 1.1em; border: none; border-radius: 25px; padding: 12px 40px; cursor: pointer; transition: 0.3s; font-weight: 600; }
+        button:hover { background: #eee; transform: scale(1.05); }
+        a { color: #fff; text-decoration: underline; font-size: 0.9em; display: inline-block; margin-top: 15px; }
+        .form-field { text-align: left; background: white; color: #555; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        .form-field label { font-size: 0.9em; }
+        .form-errors { 
+            color: #111; 
+            background: #ffcccc; 
+            padding: 10px; 
+            border-radius: 10px; 
+            margin-bottom: 15px; 
+            text-align: left; 
+            font-size: 0.9em; 
+        }
+        ul.helptext { display: none; }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Create Patient Account</h1>
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                {% if field.errors %}
+                    <div class="form-errors">
+                        {% for error in field.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% if field.field.widget.input_type == 'file' %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+            {% endfor %}
+
+            <button type="submit">Sign Up</button>
+        </form>
+        <a href="{% url 'login_page' %}">Already have an account? Login</a>
+    </div>
+</body>
+</html>

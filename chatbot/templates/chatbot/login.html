@@ -2,152 +2,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login - MindGPT</title>
-  <link rel="stylesheet" href="{% static 'chatbot/style.css' %}">
-</head>
-<body>
-  <div class="auth-container">
-    <h2>Login to MindGPT</h2>
-    {% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
-    <form method="POST">
-      {% csrf_token %}
-      <input type="text" name="username" placeholder="Username" required><br>
-      <input type="password" name="password" placeholder="Password" required><br>
-      <button type="submit">Login</button>
-    </form>
-    <p>Don’t have an account? <a href="{% url 'signup_page' %}">Sign up</a></p>
-  </div>
-</body>
-</html>
-
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindGPT | Login</title>
+    <title>Login - MindGPT</title>
     <style>
         body {
             margin: 0;
             font-family: "Poppins", sans-serif;
-            background: linear-gradient(135deg, #3a7bd5, #3a6073);
+            background: linear-gradient(135deg, #3a6073, #3a7bd5);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #fff;
+            overflow: hidden;
         }
 
-        .login-container {
+        .auth-container {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             padding: 60px 50px;
             border-radius: 20px;
-            text-align: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            width: 400px;
-        }
-
-        h1 {
-            font-size: 2.2em;
-            margin-bottom: 10px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-            font-size: 1em;
-        }
-
-        button {
-            background: #fff;
-            color: #3a6073;
-            border: none;
-            border-radius: 25px;
-            padding: 12px 40px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #3a6073;
-            color: #fff;
-            transform: scale(1.05);
-        }
-
-        a {
-            color: #fff;
-            text-decoration: underline;
-            font-size: 0.9em;
-            display: inline-block;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h1>Welcome Back</h1>
-        <p>Log in to continue to MindGPT</p>
-
-        {% if error %}
-            <p style="color: #ffb3b3;">{{ error }}</p>
-        {% endif %}
-
-        <form method="POST" action="{% url 'login_page' %}">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <button type="submit">Login</button>
-        </form>
-
-        <a href="{% url 'signup_page' %}">Don’t have an account? Sign up</a>
-    </div>
-</body>
-</html> -->
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindGPT | Login</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: "Poppins", sans-serif;
-            background: linear-gradient(135deg, #3a7bd5, #3a6073);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            padding: 60px 50px;
-            border-radius: 20px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
             width: 400px;
+            max-width: 90%;
         }
 
-        h1 {
-            font-size: 2.2em;
+        h2 {
+            font-size: 2.4em;
             margin-bottom: 10px;
         }
 
-        p.subtitle {
+        p {
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 30px;
-            font-size: 1em;
-            opacity: 0.9;
         }
 
         input {
@@ -158,22 +47,23 @@
             margin-bottom: 20px;
             font-size: 1em;
             outline: none;
+            box-sizing: border-box; /* Fixes padding issue */
         }
 
         button {
             background: #fff;
             color: #3a6073;
+            font-size: 1.1em;
             border: none;
             border-radius: 25px;
             padding: 12px 40px;
             cursor: pointer;
-            font-weight: 600;
             transition: 0.3s;
+            font-weight: 600;
         }
 
         button:hover {
-            background: #3a6073;
-            color: #fff;
+            background: #eee;
             transform: scale(1.05);
         }
 
@@ -185,54 +75,34 @@
             margin-top: 15px;
         }
 
-        /* Message styling */
-        .messages {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 20px;
+        a:hover {
+            color: #cce3ff;
         }
-
-        .messages li {
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+        
+        .error-message {
+            color: #ffcccc;
             font-weight: 500;
-        }
-
-        .messages .success {
-            background-color: rgba(144, 238, 144, 0.2);
-            border: 1px solid #90ee90;
-            color: #c3ffb8;
-        }
-
-        .messages .error {
-            background-color: rgba(255, 99, 71, 0.2);
-            border: 1px solid #ff6347;
-            color: #ffb3b3;
+            margin-top: 10px;
+            margin-bottom: 0;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Welcome Back</h1>
-        <p class="subtitle">Log in to continue to MindGPT</p>
-
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li class="{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
+    <div class="auth-container">
+        <h2>Welcome Back</h2>
+        <p>Login to MindGPT</p>
+        
+        {% if error %}
+            <p class="error-message" style="margin-bottom: 20px;">{{ error }}</p>
         {% endif %}
 
-        <form method="POST" action="{% url 'login_page' %}">
+        <form method="POST">
             {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="text" name="username" placeholder="Username or Email" required><br>
             <input type="password" name="password" placeholder="Password" required><br>
             <button type="submit">Login</button>
         </form>
-
-        <a href="{% url 'signup_page' %}">Don’t have an account? Sign up</a>
+        <p>Don’t have an account? <a href="{% url 'signup_chooser' %}">Sign up</a></p>
     </div>
 </body>
 </html>
