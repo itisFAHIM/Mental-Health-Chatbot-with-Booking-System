@@ -95,3 +95,5 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment with Dr. {self.doctor.username} for {self.patient.username} at {self.start_time}"
+    
+    
