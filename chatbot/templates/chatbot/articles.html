@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,6 +56,8 @@
             text-decoration: none;
             color: #555;
             font-weight: 500;
+            position: relative; /* For badge positioning */
+            padding: 5px 0;
         }
         .navbar .nav-links a.active {
             color: #007bff;
@@ -75,7 +78,7 @@
         }
         .btn-primary {
             background-color: #007bff;
-            color: white; 
+            color: white;
         }
         .btn-secondary {
             background-color: #e9f2ff;
@@ -85,12 +88,28 @@
             background-color: #ff4d4d;
             color: white;
         }
+        /* --- Notification Badge Style --- */
+        .notification-badge {
+            background-color: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            position: absolute;
+            top: -5px;
+            right: -15px;
+            min-width: 15px;
+            text-align: center;
+            line-height: 1.2;
+            pointer-events: none;
+        }
 
         /* --- New Styles for Article Page --- */
         .main-content {
             padding: 40px 0;
         }
-        
+
         /* Post Creation Form */
         .create-post-form {
             background: #fff;
@@ -117,7 +136,7 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            box-sizing: border-box; /* Important */
+            box-sizing: border-box;
             font-family: inherit;
             font-size: 1rem;
         }
@@ -137,29 +156,34 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        
+
         /* Article Feed */
         .article-feed {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
+        /* --- UPDATED ARTICLE CARD STRUCTURE --- */
         .article-card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow: hidden; /* To contain the image */
+            background: #ffffff;
+            border-radius: 12px; /* Slightly rounder */
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08); /* Stronger shadow */
+            overflow: hidden;
+            display: flex; /* Make it a flex container */
+            flex-direction: column;
         }
         .article-image img {
             width: 100%;
             height: auto;
-            max-height: 400px;
+            max-height: 300px; /* Reduced max height */
             object-fit: cover;
         }
         .article-content {
             padding: 25px;
+            display: flex;
+            flex-direction: column;
         }
-        
+
         /* Author Styles */
         .author-info {
             display: flex;
@@ -172,31 +196,33 @@
             height: 45px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid #eee;
+            border: 2px solid #007bff; /* Highlight doctor's profile pic */
         }
         .author-details {
             font-size: 0.95rem;
             color: #555;
             line-height: 1.4;
         }
-        
+        .author-details strong { color: #222; }
+        .author-details span { font-size: 0.85em; color: #888; }
+
         .article-content h2 {
-            margin: 0 0 10px 0;
-            color: #222;
+            margin: 0 0 15px 0;
+            color: #007bff; /* Highlight headline */
+            font-size: 1.6rem;
         }
         .article-content p {
             font-size: 1rem;
             line-height: 1.6;
             color: #444;
-            white-space: pre-wrap; /* Respects newlines in the post */
+            white-space: pre-wrap;
         }
 
-        /* --- NEW: Styles for "View More" --- */
+        /* --- Styles for "View More" --- */
         .article-body-short {
-            max-height: 150px; /* About 7-8 lines */
+            max-height: 150px;
             overflow: hidden;
             position: relative;
-            /* Create a fade-out effect at the bottom */
             mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
         .article-body-full {
@@ -211,9 +237,8 @@
             cursor: pointer;
             padding: 5px 0;
             margin-top: 10px;
+            text-align: left;
         }
-        /* --- END NEW STYLES --- */
-
     </style>
 </head>
 <body>
@@ -226,18 +251,20 @@
             </a>
             <div class="nav-links">
                 <a href="{% url 'landing_page' %}">Home</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'article_feed_page' %}">Articles</a>
-                    <a href="{% url 'index' %}">MindGPT Chat</a>
-                    <a href="{% url 'online_session_page' %}">Online Session</a>
-                    
-                    <a href="{% url 'my_appointments' %}">My Appointments</a>
-                    
-                    {% if user.profile.role == 'doctor' and user.profile.is_approved %}
-                        <a href="{% url 'search_patients' %}">Patient Search</a>
+                <a href="{% url 'article_feed_page' %}" class="active">Articles</a>
+                <a href="{% url 'index' %}">MindGPT Chat</a>
+                <a href="{% url 'online_session_page' %}">Online Session</a>
+
+                <a href="{% url 'my_appointments' %}">
+                    My Appointments
+                    {% if notification_count > 0 %}
+                        <span class="notification-badge">{{ notification_count }}</span>
                     {% endif %}
-                {% else %}
-                    {% endif %}
+                </a>
+
+                {% if user.is_authenticated and user.profile.role == 'doctor' and user.profile.is_approved %}
+                    <a href="{% url 'search_patients' %}">Patient Search</a>
+                {% endif %}
             </div>
             <div class="nav-auth">
                 {% if user.is_authenticated %}
@@ -253,7 +280,7 @@
 
     <main class="main-content">
         <div class="container">
-            
+
             {% if is_doctor %}
             <div class="create-post-form">
                 <h3>Create New Article</h3>
@@ -278,38 +305,44 @@
 
             <div class="article-feed">
                 {% for article in articles %}
-                <div class="article-card" id="article-{{ article.id }}">
-                    {% if article.image %}
-                    <div class="article-image">
-                        <img src="{{ article.image.url }}" alt="{{ article.headline }}">
-                    </div>
-                    {% endif %}
-                    <div class="article-content">
-                        
-                        <div class="author-info">
-                            {% if article.author.profile.profile_picture %}
-                                <img src="{{ article.author.profile.profile_picture.url }}" alt="{{ article.author.username }}" class="author-avatar">
-                            {% else %}
-                                <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar" class="author-avatar">
-                            {% endif %}
-                            <div class="author-details">
-                                <strong>{{ article.author.username }}</strong>
-                                {% if article.author.profile.role == 'doctor' %} 
-                                    <span style="color: #007bff; font-weight: 600;">(Verified Specialist)</span> 
-                                {% endif %}
-                            </div>
-                        </div>
 
-                        <h2>{{ article.headline }}</h2>
-                        
-                        <div class="article-body-short" id="article-body-{{ article.id }}">
-                            <p>{{ article.content }}</p>
+                <a href="{% url 'article_detail_page' article.id %}" class="article-link-wrapper" style="text-decoration: none;">
+                    <div class="article-card" id="article-{{ article.id }}">
+                        {% if article.image %}
+                        <div class="article-image">
+                            <img src="{{ article.image.url }}" alt="{{ article.headline }}">
                         </div>
-                        <button class="view-more-btn" data-target="article-body-{{ article.id }}">
-                            View More
-                        </button>
+                        {% endif %}
+                        <div class="article-content">
+
+                            <div class="author-info">
+                                {% if article.author.profile.profile_picture %}
+                                    <img src="{{ article.author.profile.profile_picture.url }}" alt="{{ article.author.username }}" class="author-avatar">
+                                {% else %}
+                                    <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar" class="author-avatar">
+                                {% endif %}
+                                <div class="author-details">
+                                    <strong>{{ article.author.username }}</strong>
+                                    {% if article.author.profile.role == 'doctor' %}
+                                        <span style="color: #007bff; font-weight: 600;">(Verified Specialist)</span>
+                                    {% endif %}
+                                    <br>
+                                    <span>{{ article.created_at|naturaltime }}</span>
+                                </div>
+                            </div>
+
+                            <h2>{{ article.headline }}</h2>
+
+                            <div class="article-body-short" id="article-body-{{ article.id }}">
+                                <p>{{ article.content }}</p>
+                            </div>
+                            <button class="view-more-btn" data-target="article-body-{{ article.id }}">
+                                View Article
+                            </button>
+
                         </div>
-                </div>
+                    </div>
+                </a>
                 {% empty %}
                 <p>No articles have been posted yet. Check back soon!</p>
                 {% endfor %}
@@ -319,31 +352,54 @@
     </main>
 
     <script>
+        // --- AUTO-RELOAD ON IDLE LOGIC ---
+        const IDLE_TIMEOUT = 30000; // 30 seconds in milliseconds
+        let timeoutId;
+
+        function resetTimer() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(reloadPage, IDLE_TIMEOUT);
+        }
+
+        function reloadPage() {
+            window.location.reload();
+        }
+
+        window.onload = resetTimer;
+        window.onmousemove = resetTimer;
+        window.onmousedown = resetTimer;
+        window.onclick = resetTimer;
+        window.onscroll = resetTimer;
+        window.onkeypress = resetTimer;
+        // --- END AUTO-RELOAD ON IDLE LOGIC ---
+
+
         document.addEventListener('DOMContentLoaded', () => {
-            // Find all "View More" buttons
+            // --- View More/View Less Logic ---
             const viewMoreButtons = document.querySelectorAll('.view-more-btn');
-            
+
             viewMoreButtons.forEach(button => {
+                const targetId = button.dataset.target;
+                const contentElement = document.getElementById(targetId);
+
+                // Hide button if content is short
+                if (contentElement.scrollHeight <= 150) {
+                    button.style.display = 'none';
+                    contentElement.classList.remove('article-body-short');
+                }
+
                 button.addEventListener('click', () => {
-                    // Get the target ID from the button's data attribute
-                    const targetId = button.dataset.target;
-                    const contentElement = document.getElementById(targetId);
-                    
-                    if (contentElement) {
-                        // Toggle the classes
-                        contentElement.classList.toggle('article-body-short');
-                        contentElement.classList.toggle('article-body-full');
-                        
-                        // Change the button text
-                        if (contentElement.classList.contains('article-body-full')) {
-                            button.textContent = 'View Less';
-                        } else {
-                            button.textContent = 'View More';
-                        }
+                    contentElement.classList.toggle('article-body-short');
+                    contentElement.classList.toggle('article-body-full');
+
+                    if (contentElement.classList.contains('article-body-full')) {
+                        button.textContent = 'View Less';
+                    } else {
+                        button.textContent = 'View More';
                     }
                 });
             });
         });
     </script>
-    </body>
+</body>
 </html>

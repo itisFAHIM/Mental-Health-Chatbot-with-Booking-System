@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - MindGPT</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
+        .container { width: 90%; max-width: 800px; margin: 0 auto; }
+        .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
+        .navbar .nav-links { display: flex; gap: 25px; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; display: inline-block; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #e9f2ff; color: #007bff; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+
+        .main-content { padding: 40px 0; }
+        .notifications-container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .notification-item { padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #007bff; background: #f9f9f9; display: flex; justify-content: space-between; align-items: center; }
+        .notification-item.unread { background: #e3f2fd; border-left-color: #ffc107; font-weight: 600; }
+        .notification-item .time { font-size: 0.85em; color: #666; }
+        .notification-item a { color: #007bff; text-decoration: none; font-weight: 600; }
+        .notification-item a:hover { text-decoration: underline; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo"><img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo"> MindGPT</a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                <a href="{% url 'my_appointments' %}">My Appointments</a>
+                <a href="{% url 'notifications' %}" class="active">Notifications</a>
+            </div>
+            <div class="nav-auth">
+                <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="notifications-container">
+                <h2>🔔 Notifications {% if unread_count > 0 %}<span style="color: #ffc107;">({{ unread_count }} new)</span>{% endif %}</h2>
+
+                {% if notifications %}
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <div>
+                            <p style="margin: 0;">{{ notification.message }}</p>
+                            <span class="time">{{ notification.created_at|date:"F d, Y - g:i A" }}</span>
+                        </div>
+                        <a href="{% url 'view_prescription' notification.prescription.prescription_id %}">View →</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div style="font-size: 4em; opacity: 0.3;">🔔</div>
+                        <h3>No Notifications</h3>
+                        <p>You don't have any prescription notifications yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

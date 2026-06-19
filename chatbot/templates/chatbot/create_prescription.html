@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Prescription - MindGPT</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
+        .container { width: 90%; max-width: 1000px; margin: 0 auto; }
+        .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
+        .navbar .nav-links { display: flex; gap: 25px; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; display: inline-block; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #e9f2ff; color: #007bff; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+
+        .main-content { padding: 40px 0; }
+        .prescription-form { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .patient-info { background: #f0f7ff; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+        .patient-info h3 { margin-top: 0; color: #007bff; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        .medicine-item { background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #e0e0e0; position: relative; }
+        .medicine-item h4 { margin-top: 0; color: #007bff; }
+        .medicine-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .remove-medicine { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
+
+        .add-medicine-btn { background: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 20px 0; }
+        .submit-btn { background: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1.1rem; width: 100%; }
+    </style>
+
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo"><img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo"> MindGPT</a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                <a href="{% url 'search_patients' %}">Patient Search</a>
+                <a href="{% url 'manage_medicines' %}">Medicines</a>
+                <a href="{% url 'my_appointments' %}">My Appointments</a>
+            </div>
+            <div class="nav-auth">
+                <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+<main class="main-content">
+    <div class="container">
+        <div class="prescription-form">
+            <h2>{% if prescription %}Edit Prescription{% else %}Create Prescription{% endif %}</h2>
+
+            <div class="patient-info">
+                <h3>Patient Information</h3>
+                <p><strong>Name:</strong> {{ patient.get_full_name }}</p>
+                <p><strong>Patient ID:</strong> PID-{{ patient.id|stringformat:"05d" }}</p>
+                <p><strong>Email:</strong> {{ patient.email }}</p>
+            </div>
+
+            <form method="POST" id="prescriptionForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="diagnosis">Diagnosis:</label>
+                    <textarea name="diagnosis" id="diagnosis" placeholder="Enter patient diagnosis...">{% if prescription %}{{ prescription.diagnosis }}{% endif %}</textarea>
+                </div>
+                <div class="form-group">
+    <label for="diagnosis">Diagnosis:</label>
+    <textarea name="diagnosis" id="diagnosis" placeholder="Enter patient diagnosis...">{% if prescription %}{{ prescription.diagnosis }}{% endif %}</textarea>
+</div>
+
+<!-- NEW: Allow patient to edit -->
+<div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+    <input type="checkbox" name="allow_patient_edit" id="allow_patient_edit"
+           {% if prescription.is_editable_by_patient %}checked{% endif %}>
+    <label for="allow_patient_edit" style="margin: 0;">Allow patient to add notes to this prescription</label>
+</div>
+
+                <h3>Medications</h3>
+                <div id="medicineContainer">
+                    {% if existing_items %}
+                        {% for item in existing_items %}
+                        <div class="medicine-item">
+                            <button type="button" class="remove-medicine" onclick="removeMedicine(this)">Remove</button>
+                            <h4>Medicine {{ forloop.counter }}</h4>
+                            <div class="medicine-grid">
+                                <div class="form-group">
+                                    <label>Select Medicine:</label>
+                                    <select name="medicine_id[]" required>
+                                        <option value="">-- Select Medicine --</option>
+                                        {% for med in medicines %}
+                                            <option value="{{ med.id }}" {% if med.id == item.medicine.id %}selected{% endif %}>
+                                                {{ med.name }} {% if med.strength %}({{ med.strength }}){% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dosage:</label>
+                                    <input type="text" name="dosage[]" placeholder="e.g., 1 tablet" value="{{ item.dosage }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frequency:</label>
+                                    <select name="frequency[]" required>
+                                        <option value="1" {% if item.frequency == "1" %}selected{% endif %}>Once daily</option>
+                                        <option value="2" {% if item.frequency == "2" %}selected{% endif %}>Twice daily</option>
+                                        <option value="3" {% if item.frequency == "3" %}selected{% endif %}>Three times daily</option>
+                                        <option value="4" {% if item.frequency == "4" %}selected{% endif %}>Four times daily</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration:</label>
+                                    <select name="duration[]" required>
+                                        <option value="3" {% if item.duration_days == 3 %}selected{% endif %}>3 days</option>
+                                        <option value="5" {% if item.duration_days == 5 %}selected{% endif %}>5 days</option>
+                                        <option value="7" {% if item.duration_days == 7 %}selected{% endif %}>7 days</option>
+                                        <option value="10" {% if item.duration_days == 10 %}selected{% endif %}>10 days</option>
+                                        <option value="14" {% if item.duration_days == 14 %}selected{% endif %}>14 days</option>
+                                        <option value="30" {% if item.duration_days == 30 %}selected{% endif %}>30 days</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Timing:</label>
+                                    <select name="timing[]" required>
+                                        <option value="before_meal" {% if item.timing == "before_meal" %}selected{% endif %}>Before meal</option>
+                                        <option value="after_meal" {% if item.timing == "after_meal" %}selected{% endif %}>After meal</option>
+                                        <option value="with_meal" {% if item.timing == "with_meal" %}selected{% endif %}>With meal</option>
+                                        <option value="empty_stomach" {% if item.timing == "empty_stomach" %}selected{% endif %}>Empty stomach</option>
+                                        <option value="anytime" {% if item.timing == "anytime" %}selected{% endif %}>Anytime</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>Special Instructions:</label>
+                                    <input type="text" name="instructions[]" placeholder="Any special instructions..." value="{{ item.special_instructions }}">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="medicine-item">
+                            <button type="button" class="remove-medicine" onclick="removeMedicine(this)">Remove</button>
+                            <h4>Medicine 1</h4>
+                            <div class="medicine-grid">
+                                <div class="form-group">
+                                    <label>Select Medicine:</label>
+                                    <select name="medicine_id[]" required>
+                                        <option value="">-- Select Medicine --</option>
+                                        {% for med in medicines %}
+                                            <option value="{{ med.id }}">{{ med.name }} {% if med.strength %}({{ med.strength }}){% endif %}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dosage:</label>
+                                    <input type="text" name="dosage[]" placeholder="e.g., 1 tablet" value="1 tablet" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frequency:</label>
+                                    <select name="frequency[]" required>
+                                        <option value="1">Once daily</option>
+                                        <option value="2" selected>Twice daily</option>
+                                        <option value="3">Three times daily</option>
+                                        <option value="4">Four times daily</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration:</label>
+                                    <select name="duration[]" required>
+                                        <option value="3">3 days</option>
+                                        <option value="5">5 days</option>
+                                        <option value="7" selected>7 days</option>
+                                        <option value="10">10 days</option>
+                                        <option value="14">14 days</option>
+                                        <option value="30">30 days</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Timing:</label>
+                                    <select name="timing[]" required>
+                                        <option value="before_meal">Before meal</option>
+                                        <option value="after_meal" selected>After meal</option>
+                                        <option value="with_meal">With meal</option>
+                                        <option value="empty_stomach">Empty stomach</option>
+                                        <option value="anytime">Anytime</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>Special Instructions:</label>
+                                    <input type="text" name="instructions[]" placeholder="Any special instructions...">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="button" class="add-medicine-btn" onclick="addMedicine()">+ Add Another Medicine</button>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes:</label>
+                    <textarea name="notes" id="notes" placeholder="Any additional notes or recommendations...">{% if prescription %}{{ prescription.notes }}{% endif %}</textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Save Prescription</button>
+            </form>
+        </div>
+    </div>
+</main>
+<script>
+    let medicineCount = document.querySelectorAll('.medicine-item').length;
+    if (medicineCount === 0) {
+        // If coming from a fresh start, ensure at least one item is present
+        addMedicine();
+        document.querySelector('.remove-medicine').style.display = 'none'; // Hide remove on first item
+        medicineCount = 1;
+    } else {
+        updateRemoveButtons();
+    }
+
+    function addMedicine() {
+        medicineCount++;
+        const container = document.getElementById('medicineContainer');
+        // Get the list of medicines dynamically from the Django context
+        const medicineOptions = `
+            <option value="">-- Select Medicine --</option>
+            {% for med in medicines %}
+                <option value="{{ med.id }}">{{ med.name }} {% if med.strength %}({{ med.strength }}){% endif %}</option>
+            {% endfor %}
+        `;
+
+        const medicineHTML = `
+            <div class="medicine-item">
+                <button type="button" class="remove-medicine" onclick="removeMedicine(this)">Remove</button>
+                <h4>Medicine ${medicineCount}</h4>
+                <div class="medicine-grid">
+                    <div class="form-group">
+                        <label>Select Medicine:</label>
+                        <select name="medicine_id[]" required>
+                            ${medicineOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dosage:</label>
+                        <input type="text" name="dosage[]" placeholder="e.g., 1 tablet" value="1 tablet" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency:</label>
+                        <select name="frequency[]" required>
+                            <option value="1">Once daily</option>
+                            <option value="2" selected>Twice daily</option>
+                            <option value="3">Three times daily</option>
+                            <option value="4">Four times daily</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration:</label>
+                        <select name="duration[]" required>
+                            <option value="3">3 days</option>
+                            <option value="5">5 days</option>
+                            <option value="7" selected>7 days</option>
+                            <option value="10">10 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30">30 days</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Timing:</label>
+                        <select name="timing[]" required>
+                            <option value="before_meal">Before meal</option>
+                            <option value="after_meal" selected>After meal</option>
+                            <option value="with_meal">With meal</option>
+                            <option value="empty_stomach">Empty stomach</option>
+                            <option value="anytime">Anytime</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Special Instructions:</label>
+                        <input type="text" name="instructions[]" placeholder="Any special instructions...">
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', medicineHTML);
+        updateRemoveButtons();
+    }
+
+    function removeMedicine(button) {
+        const items = document.querySelectorAll('.medicine-item');
+        if (items.length > 1) {
+            button.parentElement.remove();
+            updateMedicineNumbers();
+            updateRemoveButtons();
+        } else {
+            alert('You must have at least one medicine in the prescription.');
+        }
+    }
+
+    function updateMedicineNumbers() {
+        const items = document.querySelectorAll('.medicine-item');
+        items.forEach((item, index) => {
+            item.querySelector('h4').textContent = `Medicine ${index + 1}`;
+        });
+        medicineCount = items.length;
+    }
+
+    function updateRemoveButtons() {
+        const items = document.querySelectorAll('.medicine-item');
+        items.forEach((item) => {
+            const removeBtn = item.querySelector('.remove-medicine');
+            removeBtn.style.display = items.length > 1 ? 'block' : 'none';
+        });
+    }
+
+    // Initial call to ensure remove button logic is applied on load
+    document.addEventListener('DOMContentLoaded', updateRemoveButtons);
+</script>
+
+</body>
+</html>

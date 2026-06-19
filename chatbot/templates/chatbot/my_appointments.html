@@ -22,27 +22,33 @@
         .btn-secondary { background-color: #e9f2ff; color: #007bff; }
         .btn-danger { background-color: #ff4d4d; color: white; }
         .main-content { padding: 40px 0; }
-        
+
         /* Appointments List Styles */
         .appointments-list { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         h2 { margin-top: 0; }
         .appointment-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 15px; border-radius: 8px; margin-bottom: 10px; background: #f9f9f9; border: 1px solid #eee; }
+        .appointment-info { flex: 1; min-width: 300px; }
         .appointment-info p { margin: 0; line-height: 1.5; }
         .appointment-actions { margin-left: auto; text-align: right; }
         .btn-approve { background-color: #28a745; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
         .btn-decline { background-color: #ff4d4d; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 10px; }
         .btn-join { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
         .btn-complete { background-color: #17a2b8; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 10px; }
+        .btn-prescription { background-color: #6c757d; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 10px; display: inline-block; }
+        .prescription-link { display: inline-block; margin-top: 10px; margin-right: 10px; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+        .prescription-link:hover { background: #0056b3; }
+        .prescription-link.download { background: #28a745; }
+        .prescription-link.download:hover { background: #1e7e34; }
         .status-pending { color: #ff8c00; font-weight: 600; font-size: 0.9em; }
         .status-completed { color: #28a745; font-weight: 600; font-size: 0.9em; }
         .status-declined { color: #d93636; font-weight: 600; font-size: 0.9em; }
         .wait-message { background: #fdf8e6; border: 1px solid #ffecb5; color: #664d03; padding: 10px; border-radius: 8px; font-size: 0.9em; text-align: center; }
-        
+
         .link-form { display: flex; gap: 10px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .link-form input[type="url"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
         .link-form button { background: #007bff; color: white; border: none; padding: 0 15px; border-radius: 5px; cursor: pointer; }
         .btn-clear { background: #6c757d; color: white; border: none; padding: 0 10px; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
-        
+
         .feedback-section { width: 100%; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
         .feedback-form textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; padding: 8px; min-height: 80px; }
         .feedback-form select { padding: 5px; border-radius: 5px; }
@@ -71,6 +77,39 @@
         }
         .widget-header h3 { margin: 0; font-size: 1.2rem; color: #333; }
         .widget-header a { color: #007bff; text-decoration: none; font-size: 0.9em; }
+
+        /* Notification Button */
+        .notification-btn {
+            display: block;
+            position: relative;
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .notification-btn:hover {
+            background: #0056b3;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
 
         /* --- Mini Calendar Styles --- */
         .calendar-widget {
@@ -131,6 +170,7 @@
                 <a href="{% url 'my_appointments' %}" class="active">My Appointments</a>
                 {% if user.is_authenticated and user.profile.role == 'doctor' and user.profile.is_approved %}
                     <a href="{% url 'search_patients' %}">Patient Search</a>
+                    <a href="{% url 'manage_medicines' %}">Medicines</a>
                 {% endif %}
             </div>
             <div class="nav-auth">
@@ -142,14 +182,14 @@
     <main class="main-content">
         <div class="container">
             <div class="dashboard-layout">
-                
+
                 <div class="appointments-list">
                     {% if user.profile.role == 'doctor' %}
                         <h2>Pending Approvals</h2>
                         {% for appt in pending_appointments %}
                         <div class="appointment-item">
                             <div class="appointment-info">
-                                <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }} (ID: PID-000{{ appt.patient.id }})</p>
+                                <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }} (ID: PID-{{ appt.patient.id|stringformat:"05d" }})</p>
                                 <p><strong>Time:</strong> {{ appt.start_time|date:"D, M d" }} at {{ appt.start_time|time:"g:i A" }}</p>
                             </div>
                             <div class="appointment-actions">
@@ -160,9 +200,9 @@
                         {% empty %}
                         <p>You have no pending appointment requests.</p>
                         {% endfor %}
-                        
+
                         <hr style="margin: 30px 0;">
-                        
+
                         <h2>Confirmed Appointments</h2>
                         {% for appt in confirmed_appointments %}
                         <div class="appointment-item">
@@ -172,6 +212,7 @@
                             </div>
                             <div class="appointment-actions">
                                 <a href="{% url 'complete_appointment' appt.id %}" class="btn-complete">Mark as Complete</a>
+                                <a href="{% url 'create_prescription' appt.patient.id %}" class="btn-prescription">Create Prescription</a>
                             </div>
                             <form class="link-form" method="POST">
                                 {% csrf_token %}
@@ -186,7 +227,7 @@
                         {% empty %}
                         <p>You have no confirmed appointments.</p>
                         {% endfor %}
-                        
+
                         <hr style="margin: 30px 0;">
                         <h2>Completed Appointments</h2>
                         {% for appt in completed_appointments %}
@@ -194,6 +235,17 @@
                             <div class="appointment-info">
                                 <p><strong>Patient:</strong> {{ appt.patient.first_name }} {{ appt.patient.last_name }}</p>
                                 <p><strong>Completed:</strong> {{ appt.start_time|date:"D, M d" }}</p>
+
+                                <!-- Prescription Links for Doctor -->
+                                {% if appt.prescriptions.exists %}
+                                    <a href="{% url 'view_prescription' appt.prescriptions.first.prescription_id %}" class="prescription-link">
+                                        📋 View Prescription
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'create_prescription' appt.patient.id %}" class="prescription-link" style="background: #28a745;">
+                                        ➕ Create Prescription
+                                    </a>
+                                {% endif %}
                             </div>
                             {% if appt.feedback_text %}
                                 <div class="feedback-section feedback-display">
@@ -209,7 +261,7 @@
                         {% empty %}
                         <p>You have no completed appointments.</p>
                         {% endfor %}
-                    
+
                     {% else %}
                         <h2>Confirmed Appointments</h2>
                         {% for appt in confirmed_appointments %}
@@ -232,7 +284,7 @@
                         {% empty %}
                         <p>You have no confirmed appointments.</p>
                         {% endfor %}
-                    
+
                         <hr style="margin: 30px 0;">
                         <h2>Pending Confirmation</h2>
                         {% for appt in pending_appointments %}
@@ -248,7 +300,7 @@
                         {% empty %}
                         <p>You have no pending appointment requests.</p>
                         {% endfor %}
-                        
+
                         <hr style="margin: 30px 0;">
                         <h2>Completed Appointments</h2>
                         {% for appt in completed_appointments %}
@@ -256,6 +308,20 @@
                             <div class="appointment-info">
                                 <p><strong>Doctor:</strong> {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</p>
                                 <p><strong>Completed:</strong> {{ appt.start_time|date:"D, M d" }}</p>
+
+                                <!-- Prescription Links for Patient -->
+                                <div style="margin-top: 10px;">
+                                    {% if appt.prescriptions.exists %}
+                                        <a href="{% url 'view_prescription' appt.prescriptions.first.prescription_id %}" class="prescription-link">
+                                            📋 View My Prescription
+                                        </a>
+                                        <a href="{% url 'download_prescription' appt.prescriptions.first.prescription_id %}" class="prescription-link download">
+                                            📥 Download PDF
+                                        </a>
+                                    {% else %}
+                                        <p style="color: #888; font-size: 0.9em; margin: 5px 0;">No prescription available yet.</p>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="feedback-section">
                                 {% if not appt.feedback_text %}
@@ -286,7 +352,7 @@
                         {% empty %}
                         <p>You have no completed appointments.</p>
                         {% endfor %}
-                        
+
                         <hr style="margin: 30px 0;">
                         <h2>Declined Appointments</h2>
                         {% for appt in declined_appointments %}
@@ -315,7 +381,7 @@
                             <a href="{% url 'login_page' %}">View All &rarr;</a>
                         {% endif %}
                     </div>
-                    
+
                     {% if available_doctors %}
                         {% for doctor in available_doctors %}
                             <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee;">
@@ -337,6 +403,16 @@
                             No doctors are currently available.
                         </p>
                     {% endif %}
+
+                    {% if user.is_authenticated and user.profile.role == 'patient' %}
+                        <a href="{% url 'notifications' %}" class="notification-btn">
+                            🔔 Notifications
+                            {% if unread_notifications_count > 0 %}
+                                <span class="notification-badge">{{ unread_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+
                     <div class="calendar-widget">
                         <div class="calendar-header" id="calendar-month"></div>
                         <div class="calendar-grid" id="calendar-grid">
@@ -347,7 +423,7 @@
                             <div class="calendar-day-name">T</div>
                             <div class="calendar-day-name">F</div>
                             <div class="calendar-day-name">S</div>
-                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -358,36 +434,36 @@
         document.addEventListener('DOMContentLoaded', () => {
             const calendarGrid = document.getElementById('calendar-grid');
             const calendarMonth = document.getElementById('calendar-month');
-            
+
             if (!calendarGrid) return;
 
             const date = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
-            
+
             calendarMonth.textContent = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-            
+
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-            
+            const daysInMonth = new Date(date.getYear(), date.getMonth() + 1, 0).getDate();
+
             // Add empty slots for previous month
             for (let i = 0; i < firstDay; i++) {
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'calendar-day empty';
                 calendarGrid.appendChild(emptyDiv);
             }
-            
+
             // Add days
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
                 dayDiv.textContent = i;
-                
+
                 if (i === date.getDate()) {
                     dayDiv.classList.add('today');
                 }
-                
+
                 calendarGrid.appendChild(dayDiv);
             }
         });

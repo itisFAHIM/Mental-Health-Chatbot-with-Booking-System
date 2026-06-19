@@ -1,4 +1,4 @@
-{% load static %}
+<!-- {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,12 +21,12 @@
         .btn-primary { background-color: #007bff; color: white; }
         .btn-secondary { background-color: #e9f2ff; color: #007bff; }
         .btn-danger { background-color: #ff4d4d; color: white; }
-        
+
         /* Search Page Styles */
         .main-content { padding: 40px 0; }
         .search-container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         .search-container h2 { margin-top: 0; }
-        
+
         .search-form { display: flex; gap: 10px; margin-bottom: 20px; }
         .search-form input {
             flex: 1;
@@ -44,7 +44,7 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        
+
         .result-container { margin-top: 30px; }
         .patient-card {
             display: flex;
@@ -76,9 +76,9 @@
                     <a href="{% url 'article_feed_page' %}">Articles</a>
                     <a href="{% url 'index' %}">MindGPT Chat</a>
                     <a href="{% url 'online_session_page' %}">Online Session</a>
-                    
+
                     <a href="{% url 'my_appointments' %}">My Appointments</a>
-                    
+
                     {% if user.profile.role == 'doctor' and user.profile.is_approved %}
                         <a href="{% url 'search_patients' %}">Patient Search</a>
                     {% endif %}
@@ -126,6 +126,258 @@
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </main>
+</body>
+</html> -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Search - MindGPT</title>
+    <style>
+        /* Base styles from landing.html */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+        .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
+        .navbar .nav-links { display: flex; gap: 25px; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-links a.active { color: #007bff; }
+        .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #e9f2ff; color: #007bff; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+
+        /* Search Page Styles */
+        .main-content { padding: 40px 0; }
+        .search-container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .search-container h2 { margin-top: 0; }
+
+        .search-form { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-form input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .search-form button {
+            font-size: 1rem;
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .result-container { margin-top: 30px; }
+        .patient-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .patient-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .error-message {
+            color: #d93636;
+            font-weight: 600;
+        }
+
+        /* Chat History Styles */
+        .chat-history-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .chat-history-container h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .no-chat-message {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+        .chat-conversation {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chat-conversation-header {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 8px;
+        }
+        .chat-message.user {
+            background-color: #e3f2fd;
+            margin-left: 0;
+        }
+        .chat-message.bot {
+            background-color: #f5f5f5;
+            margin-left: 20px;
+        }
+        .chat-message-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .chat-message.user .chat-message-label {
+            color: #1976d2;
+        }
+        .chat-message.bot .chat-message-label {
+            color: #388e3c;
+        }
+        .chat-message-content {
+            color: #333;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .chat-timestamp {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo"><img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo"> MindGPT</a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'article_feed_page' %}">Articles</a>
+                    <a href="{% url 'index' %}">MindGPT Chat</a>
+                    <a href="{% url 'online_session_page' %}">Online Session</a>
+                    <a href="{% url 'my_appointments' %}">My Appointments</a>
+                    {% if user.profile.role == 'doctor' and user.profile.is_approved %}
+                        <a href="{% url 'search_patients' %}" class="active">Patient Search</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="nav-auth">
+                <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="search-container">
+                <h2>Search for a Patient</h2>
+                <form class="search-form" method="POST">
+                    {% csrf_token %}
+                    <input type="text" name="patient_id" placeholder="Enter Patient ID (e.g., PID-0005)" required>
+                    <button type="submit">Search</button>
+                </form>
+
+                <hr>
+
+                <div class="result-container">
+                    {% if patient_found %}
+                        <h3>Patient Found:</h3>
+                        <div class="patient-card">
+                            {% if patient_found.profile.profile_picture %}
+                                <img src="{{ patient_found.profile.profile_picture.url }}" alt="Profile Picture">
+                            {% else %}
+                                <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar">
+                            {% endif %}
+                            <div>
+                                <h4>{{ patient_found.first_name }} {{ patient_found.last_name }}</h4>
+                                <p><strong>Username:</strong> {{ patient_found.username }}<br>
+                                   <strong>Email:</strong> {{ patient_found.email }}<br>
+                                   <strong>Patient ID:</strong> PID-{{ patient_found.id|stringformat:"05d" }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if error_message %}
+                        <p class="error-message">{{ error_message }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if patient_found %}
+                <div class="chat-history-container">
+                    <h3>Chat History with MindGPT</h3>
+
+                    {% if chat_history %}
+                        {% for chat in chat_history %}
+                            <div class="chat-conversation">
+                                <div class="chat-conversation-header">
+                                    Conversation ID: {{ chat.conversation_id }} | {{ chat.timestamp|date:"F d, Y - g:i A" }}
+                                </div>
+
+                                <div class="chat-message user">
+                                    <div class="chat-message-label">Patient:</div>
+                                    <div class="chat-message-content">{{ chat.message }}</div>
+                                    <div class="chat-timestamp">{{ chat.timestamp|date:"g:i A" }}</div>
+                                </div>
+
+                                <div class="chat-message bot">
+                                    <div class="chat-message-label">MindGPT:</div>
+                                    <div class="chat-message-content">{{ chat.reply }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-chat-message">
+                            <p>This patient has no chat history yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+                            {% if patient_found %}
+                    <h3>Patient Found:</h3>
+                    <div class="patient-card">
+                        {% if patient_found.profile.profile_picture %}
+                            <img src="{{ patient_found.profile.profile_picture.url }}" alt="Profile Picture">
+                        {% else %}
+                            <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar">
+                        {% endif %}
+                        <div>
+                            <h4>{{ patient_found.first_name }} {{ patient_found.last_name }}</h4>
+                            <p><strong>Username:</strong> {{ patient_found.username }}<br>
+                            <strong>Email:</strong> {{ patient_found.email }}<br>
+                            <strong>Patient ID:</strong> PID-{{ patient_found.id|stringformat:"05d" }}</p>
+
+                            <a href="{% url 'create_prescription' patient_found.id %}" class="btn btn-primary" style="display: inline-block; margin-top: 10px;">
+                                Create/Edit Prescription
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
         </div>
     </main>
 </body>

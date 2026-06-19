@@ -1,12 +1,12 @@
 {% load static %}
-<!DOCTYPE html>
+{% load humanize %}  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ article.headline }} - MindGPT</title>
     <style>
-        /* Base styles from landing.html */
+
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
         .container { width: 90%; max-width: 800px; margin: 0 auto; }
         .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -14,15 +14,15 @@
         .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
         .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
         .navbar .nav-links { display: flex; gap: 25px; }
-        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; position: relative; padding: 5px 0; }
         .navbar .nav-links a.active { color: #007bff; }
         .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
         .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; }
         .btn-primary { background-color: #007bff; color: white; }
         .btn-secondary { background-color: #e9f2ff; color: #007bff; }
         .btn-danger { background-color: #ff4d4d; color: white; }
-        
-        /* Styles for Article Page */
+
+        /* Article Page Styles */
         .main-content { padding: 40px 0; }
         .article-card { background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
         .article-image img { width: 100%; height: auto; max-height: 400px; object-fit: cover; }
@@ -30,8 +30,128 @@
         .author-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
         .author-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; }
         .author-details { font-size: 0.95rem; color: #555; line-height: 1.4; }
+        .author-details span { font-size: 0.85em; color: #888; }
         .article-content h2 { margin: 0 0 10px 0; color: #222; }
         .article-content p { font-size: 1rem; line-height: 1.6; color: #444; white-space: pre-wrap; }
+
+        /* RAG Chat style */
+        #floating-chat-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 330px;
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out;
+        }
+        #chat-header-rag {
+            background: #f0f7ff;
+            color: #007bff;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-header-rag button {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        #chat-window {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            max-height: 350px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #chat-form-rag {
+            padding: 10px 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        #chat-form-rag input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        #chat-form-rag button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 1.0rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #chat-form-rag button:hover {
+            background: #0056b3;
+        }
+        .rag-msg {
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            max-width: 85%;
+            word-break: break-word;
+        }
+        .rag-msg.user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 3px;
+        }
+        .rag-msg.bot {
+            background: #f4f4f4;
+            align-self: flex-start;
+            color: #222;
+            border-bottom-left-radius: 3px;
+        }
+
+        #chat-toggle-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 55px; /* Cross Button */
+            height: 55px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55), background 0.2s;
+            z-index: 1001;
+        }
+        #chat-toggle-btn:hover {
+            transform: scale(1.15) rotate(5deg);
+            background: #218838;
+        }
+
+
+        .typing-dot {
+            width: 6px; height: 6px; background-color: #888; border-radius: 50%; display: inline-block; animation: typing-bounce 1.4s infinite ease-in-out both;
+        }
+        @keyframes typing-bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
     </style>
 </head>
@@ -45,18 +165,12 @@
             </a>
             <div class="nav-links">
                 <a href="{% url 'landing_page' %}">Home</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'article_feed_page' %}">Articles</a>
-                    <a href="{% url 'index' %}">MindGPT Chat</a>
-                    <a href="{% url 'online_session_page' %}">Online Session</a>
-                    
-                    <a href="{% url 'my_appointments' %}">My Appointments</a>
-                    
-                    {% if user.profile.role == 'doctor' and user.profile.is_approved %}
-                        <a href="{% url 'search_patients' %}">Patient Search</a>
-                    {% endif %}
-                {% else %}
-                    {% endif %}
+                <a href="{% url 'article_feed_page' %}" class="active">Articles</a>
+                <a href="{% url 'index' %}">MindGPT Chat</a>
+                <a href="{% url 'online_session_page' %}">Online Session</a>
+                {% if user.is_authenticated and user.profile.role == 'doctor' and user.profile.is_approved %}
+                    <a href="{% url 'search_patients' %}">Patient Search</a>
+                {% endif %}
             </div>
             <div class="nav-auth">
                 {% if user.is_authenticated %}
@@ -72,14 +186,15 @@
 
     <main class="main-content">
         <div class="container">
+            <input type="hidden" id="article-id-source" value="{{ article.id }}">
+
             <div class="article-card">
                 {% if article.image %}
                 <div class="article-image">
                     <img src="{{ article.image.url }}" alt="{{ article.headline }}">
                 </div>
                 {% endif %}
-                <div class="article-content">
-                    <div class="author-info">
+                <div class="article-content" id="article-content-source"> <div class="author-info">
                         {% if article.author.profile.profile_picture %}
                             <img src="{{ article.author.profile.profile_picture.url }}" alt="{{ article.author.username }}" class="author-avatar">
                         {% else %}
@@ -87,9 +202,11 @@
                         {% endif %}
                         <div class="author-details">
                             <strong>{{ article.author.username }}</strong>
-                            {% if article.author.profile.role == 'doctor' %} 
-                                <span style="color: #007bff; font-weight: 600;">(Verified Specialist)</span> 
+                            {% if article.author.profile.role == 'doctor' %}
+                                <span style="color: #007bff; font-weight: 600;">(Verified Specialist)</span>
                             {% endif %}
+                            <br>
+                            <span>{{ article.created_at|naturaltime }}</span>
                         </div>
                     </div>
                     <h2>{{ article.headline }}</h2>
@@ -99,5 +216,103 @@
         </div>
     </main>
 
+    <button id="chat-toggle-btn">💬</button>
+
+    <div id="floating-chat-container">
+        <div id="chat-header-rag">
+            <span>Ask Article Bot</span>
+            <button onclick="document.getElementById('floating-chat-container').style.display='none'; document.getElementById('chat-toggle-btn').textContent='💬'">❌</button>
+        </div>
+        <div id="chat-window">
+            <div class="rag-msg bot">Hello! I'm ready to answer any questions you have about this article.</div>
+        </div>
+        <form id="chat-form-rag" onsubmit="handleRagSubmit(event)">
+            {% csrf_token %}
+            <input type="text" id="rag-chat-input" placeholder="Ask about the article...">
+            <button type="submit">⬆</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatToggleBtn = document.getElementById('chat-toggle-btn');
+            const chatContainer = document.getElementById('floating-chat-container');
+            const chatForm = document.getElementById('chat-form-rag');
+            const chatWindow = document.getElementById('chat-window');
+            const chatInput = document.getElementById('rag-chat-input');
+            const articleContentSource = document.getElementById('article-content-source');
+
+
+            const fullArticleText = articleContentSource.innerText || articleContentSource.textContent;
+
+
+            chatToggleBtn.addEventListener('click', () => {
+                const isHidden = chatContainer.style.display === 'flex';
+                chatContainer.style.display = isHidden ? 'none' : 'flex';
+                chatToggleBtn.textContent = isHidden ? '💬' : '❌';
+                if (!isHidden) chatInput.focus();
+            });
+
+
+            function appendMsg(text, sender) {
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('rag-msg', sender);
+
+                if (text === '...') {
+                    msgDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot" style="animation-delay: 0.2s;"></div><div class="typing-dot" style="animation-delay: 0.4s;"></div>';
+                    msgDiv.style.display = 'flex';
+                    msgDiv.style.gap = '6px';
+                } else {
+                    msgDiv.textContent = text;
+                }
+
+                chatWindow.appendChild(msgDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                return msgDiv;
+            }
+
+            function removeLastMsg() {
+                if (chatWindow.lastChild) {
+                    chatWindow.removeChild(chatWindow.lastChild);
+                }
+            }
+
+
+window.handleRagSubmit = async (e) => {
+    e.preventDefault();
+    const userMessage = chatInput.value.trim();
+    if (!userMessage) return;
+
+
+    const articleId = document.getElementById('article-id-source').value;
+
+    appendMsg(userMessage, 'user');
+    chatInput.value = '';
+
+    const indicator = appendMsg('...', 'bot');
+
+    try {
+        const response = await fetch("{% url 'article_rag_api' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: userMessage,
+
+                article_id: articleId
+            }),
+        });
+
+        const data = await response.json();
+
+        removeLastMsg();
+        appendMsg(data.reply || "Error: Could not retrieve analysis.", 'bot');
+
+    } catch (error) {
+        removeLastMsg();
+        appendMsg("Error: Server communication failed. Please check your network.", 'bot');
+    }
+};
+        });
+    </script>
 </body>
 </html>

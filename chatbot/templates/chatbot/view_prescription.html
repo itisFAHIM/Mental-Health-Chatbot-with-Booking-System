@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Prescription - MindGPT</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2ff 100%); color: #333; }
+        .container { width: 90%; max-width: 900px; margin: 0 auto; }
+        .navbar { padding: 20px 0; background-color: #ffffff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #007bff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .navbar .logo img { width: 40px; height: 40px; border-radius: 50%; }
+        .navbar .nav-links { display: flex; gap: 25px; }
+        .navbar .nav-links a { text-decoration: none; color: #555; font-weight: 500; }
+        .navbar .nav-auth { display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; display: inline-block; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #e9f2ff; color: #007bff; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+
+        .main-content { padding: 40px 0; }
+        .prescription-view { background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .header-section { text-align: center; border-bottom: 3px solid #007bff; padding-bottom: 20px; margin-bottom: 30px; }
+        .header-section h1 { color: #007bff; margin: 0 0 10px 0; }
+        .prescription-id { color: #666; font-size: 0.9em; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-weight: 600; color: #666; font-size: 0.9em; margin-bottom: 5px; }
+        .info-value { color: #333; font-size: 1.1em; }
+
+        .section { margin: 30px 0; }
+        .section h3 { color: #007bff; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 20px; }
+
+        .medicine-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .medicine-table th { background: #007bff; color: white; padding: 12px; text-align: left; }
+        .medicine-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .medicine-table tr:hover { background: #f9f9f9; }
+
+        .diagnosis-box, .notes-box { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 4px solid #007bff; }
+
+        .action-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0; }
+
+        @media print {
+            .navbar, .action-buttons { display: none; }
+            .prescription-view { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="logo"><img src="{% static 'images/Logo.png' %}" alt="MindGPT Logo"> MindGPT</a>
+            <div class="nav-links">
+                <a href="{% url 'landing_page' %}">Home</a>
+                <a href="{% url 'my_appointments' %}">My Appointments</a>
+                {% if user.profile.role == 'doctor' %}
+                    <a href="{% url 'search_patients' %}">Patient Search</a>
+                {% endif %}
+            </div>
+            <div class="nav-auth">
+                <a href="{% url 'profile_page' %}" class="btn btn-secondary">Profile</a>
+                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+        <div class="container">
+            <div class="prescription-view">
+                <div class="header-section">
+                    <h1>Medical Prescription</h1>
+                    <p class="prescription-id">Prescription ID: {{ prescription.prescription_id }}</p>
+                    <p style="color: #666; font-size: 0.9em;">Date: {{ prescription.created_at|date:"F d, Y" }}</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Patient Name</span>
+                        <span class="info-value">{{ prescription.patient.get_full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Patient ID</span>
+                        <span class="info-value">PID-{{ prescription.patient.id|stringformat:"05d" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Doctor Name</span>
+                        <span class="info-value">Dr. {{ prescription.doctor.get_full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Specialization</span>
+                        <span class="info-value">{{ prescription.doctor.profile.specialty|default:"General Practice" }}</span>
+                    </div>
+                </div>
+
+                {% if prescription.diagnosis %}
+                <div class="section">
+                    <h3>Diagnosis</h3>
+                    <div class="diagnosis-box">
+                        {{ prescription.diagnosis }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="section">
+                    <h3>Prescribed Medications</h3>
+                    <table class="medicine-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine Name</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th>Duration</th>
+                                <th>Timing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ item.medicine.name }}</strong>
+                                    {% if item.medicine.strength %}<br><span style="color: #666; font-size: 0.9em;">{{ item.medicine.strength }}</span>{% endif %}
+                                    {% if item.special_instructions %}
+                                        <br><em style="color: #007bff; font-size: 0.9em;">{{ item.special_instructions }}</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.dosage }}</td>
+                                <td>{{ item.get_frequency_display }}</td>
+                                <td>{{ item.duration_days }} days</td>
+                                <td>{{ item.get_timing_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if prescription.notes %}
+                <div class="section">
+                    <h3>Additional Notes</h3>
+                    <div class="notes-box">
+                        {{ prescription.notes }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <<div class="action-buttons">
+    <a href="{% url 'download_prescription' prescription.prescription_id %}" class="btn btn-success">📥 Download as PDF</a>
+
+    {% if user == prescription.doctor %}
+        <a href="{% url 'create_prescription' prescription.patient.id %}" class="btn btn-primary">✏️ Edit Prescription</a>
+    {% endif %}
+
+    {% if user == prescription.patient and prescription.is_editable_by_patient %}
+        <a href="{% url 'edit_prescription_patient' prescription.prescription_id %}" class="btn btn-primary">📝 Add My Notes</a>
+    {% endif %}
+
+    <button onclick="window.print()" class="btn btn-secondary">🖨️ Print</button>
+</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
